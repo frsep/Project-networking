@@ -1,0 +1,25 @@
+---
+triple:          'arm64-apple-darwin'
+binary-path:     '/Users/sepehramid/Desktop/uni/uni 2024/computer networks/Project/rand_timetables'
+relocations:
+  - { offsetInCU: 0x26, offset: 0x26, size: 0x8, addend: 0x0, symName: _main, symObjAddr: 0x0, symBinAddr: 0x100002C7C, symSize: 0x15C }
+  - { offsetInCU: 0x59, offset: 0x59, size: 0x8, addend: 0x0, symName: _argv0, symObjAddr: 0x2F68, symBinAddr: 0x100008000, symSize: 0x0 }
+  - { offsetInCU: 0x73, offset: 0x73, size: 0x8, addend: 0x0, symName: _N, symObjAddr: 0x2F70, symBinAddr: 0x100008008, symSize: 0x0 }
+  - { offsetInCU: 0x94, offset: 0x94, size: 0x8, addend: 0x0, symName: _w, symObjAddr: 0x2F78, symBinAddr: 0x100008010, symSize: 0x0 }
+  - { offsetInCU: 0xBA, offset: 0xBA, size: 0x8, addend: 0x0, symName: _adj, symObjAddr: 0x2F80, symBinAddr: 0x100008018, symSize: 0x0 }
+  - { offsetInCU: 0xCF, offset: 0xCF, size: 0x8, addend: 0x0, symName: _type0, symObjAddr: 0x2F88, symBinAddr: 0x100008020, symSize: 0x0 }
+  - { offsetInCU: 0xE4, offset: 0xE4, size: 0x8, addend: 0x0, symName: _x, symObjAddr: 0x2F90, symBinAddr: 0x100008028, symSize: 0x0 }
+  - { offsetInCU: 0x105, offset: 0x105, size: 0x8, addend: 0x0, symName: _y, symObjAddr: 0x2F98, symBinAddr: 0x100008030, symSize: 0x0 }
+  - { offsetInCU: 0x10E, offset: 0x10E, size: 0x8, addend: 0x0, symName: _nodename, symObjAddr: 0xE88, symBinAddr: 0x100003B04, symSize: 0xB0 }
+  - { offsetInCU: 0x133, offset: 0x133, size: 0x8, addend: 0x0, symName: _nodename.name, symObjAddr: 0x2FA0, symBinAddr: 0x100008038, symSize: 0x0 }
+  - { offsetInCU: 0x14C, offset: 0x14C, size: 0x8, addend: 0x0, symName: _main, symObjAddr: 0x0, symBinAddr: 0x100002C7C, symSize: 0x15C }
+  - { offsetInCU: 0x182, offset: 0x182, size: 0x8, addend: 0x0, symName: _usage, symObjAddr: 0x15C, symBinAddr: 0x100002DD8, symSize: 0x78 }
+  - { offsetInCU: 0x1A6, offset: 0x1A6, size: 0x8, addend: 0x0, symName: _new2D, symObjAddr: 0x1D4, symBinAddr: 0x100002E50, symSize: 0x144 }
+  - { offsetInCU: 0x1F8, offset: 0x1F8, size: 0x8, addend: 0x0, symName: _build_routes, symObjAddr: 0x318, symBinAddr: 0x100002F94, symSize: 0xF0 }
+  - { offsetInCU: 0x230, offset: 0x230, size: 0x8, addend: 0x0, symName: _build_timetables, symObjAddr: 0x408, symBinAddr: 0x100003084, symSize: 0x5E8 }
+  - { offsetInCU: 0x37B, offset: 0x37B, size: 0x8, addend: 0x0, symName: _print_adjacency, symObjAddr: 0x9F0, symBinAddr: 0x10000366C, symSize: 0x158 }
+  - { offsetInCU: 0x3E5, offset: 0x3E5, size: 0x8, addend: 0x0, symName: _Warshall, symObjAddr: 0xB48, symBinAddr: 0x1000037C4, symSize: 0x2A0 }
+  - { offsetInCU: 0x4DF, offset: 0x4DF, size: 0x8, addend: 0x0, symName: _nodetype, symObjAddr: 0xDE8, symBinAddr: 0x100003A64, symSize: 0xA0 }
+  - { offsetInCU: 0x515, offset: 0x515, size: 0x8, addend: 0x0, symName: _create_file, symObjAddr: 0xF38, symBinAddr: 0x100003BB4, symSize: 0x98 }
+  - { offsetInCU: 0x54B, offset: 0x54B, size: 0x8, addend: 0x0, symName: _distance, symObjAddr: 0xFD0, symBinAddr: 0x100003C4C, symSize: 0x64 }
+...
