@@ -1,0 +1,17 @@
+# station-name,longitude,latitude
+StationA,115.9600,-31.6300
+# departure-time,route-name,departing-from,arrival-time,arrival-station
+06:01,busA_E,stopA,06:35,StationE
+07:05,busA_E,stopA,07:38,StationE
+08:08,busA_E,stopA,08:41,StationE
+09:11,busA_E,stopA,09:45,StationE
+10:17,busA_E,stopA,10:51,StationE
+11:20,busA_E,stopA,11:53,StationE
+12:23,busA_E,stopA,12:57,StationE
+13:30,busA_E,stopA,14:05,StationE
+14:36,busA_E,stopA,15:10,StationE
+15:42,busA_E,stopA,16:17,StationE
+16:46,busA_E,stopA,17:20,StationE
+17:52,busA_E,stopA,18:27,StationE
+18:57,busA_E,stopA,19:30,StationE
+20:03,busA_E,stopA,20:38,StationE

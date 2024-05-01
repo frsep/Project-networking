@@ -1,0 +1,17 @@
+# station-name,longitude,latitude
+TerminalF,116.1300,-31.6900
+# departure-time,route-name,departing-from,arrival-time,arrival-station
+06:01,busF_B,stopF,06:46,TerminalB
+07:05,busF_B,stopF,07:49,TerminalB
+08:10,busF_B,stopF,08:55,TerminalB
+09:17,busF_B,stopF,10:02,TerminalB
+10:23,busF_B,stopF,11:07,TerminalB
+11:27,busF_B,stopF,12:11,TerminalB
+12:30,busF_B,stopF,13:15,TerminalB
+13:34,busF_B,stopF,14:17,TerminalB
+14:37,busF_B,stopF,15:22,TerminalB
+15:42,busF_B,stopF,16:27,TerminalB
+16:46,busF_B,stopF,17:29,TerminalB
+17:49,busF_B,stopF,18:32,TerminalB
+18:53,busF_B,stopF,19:37,TerminalB
+19:56,busF_B,stopF,20:39,TerminalB

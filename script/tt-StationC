@@ -1,0 +1,17 @@
+# station-name,longitude,latitude
+StationC,115.9000,-31.6100
+# departure-time,route-name,departing-from,arrival-time,arrival-station
+06:01,busC_F,stopC,06:22,BusportF
+07:06,busC_F,stopC,07:27,BusportF
+08:12,busC_F,stopC,08:34,BusportF
+09:15,busC_F,stopC,09:37,BusportF
+10:20,busC_F,stopC,10:41,BusportF
+11:26,busC_F,stopC,11:48,BusportF
+12:32,busC_F,stopC,12:54,BusportF
+13:36,busC_F,stopC,13:59,BusportF
+14:44,busC_F,stopC,15:07,BusportF
+15:49,busC_F,stopC,16:10,BusportF
+16:51,busC_F,stopC,17:13,BusportF
+17:56,busC_F,stopC,18:19,BusportF
+19:00,busC_F,stopC,19:23,BusportF
+20:07,busC_F,stopC,20:29,BusportF
