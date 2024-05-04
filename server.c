@@ -33,6 +33,9 @@ void server_listen(struct client_server *my_server){
     }
     
 }
+void communicate_with_other_server(){
+    return;
+}
 
 int main(int argc, char const *argv[]){
     struct client_server my_server;
