@@ -5,13 +5,18 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "(lldb) Attach",
+            "name": "(lldb) Launch",
             "type": "cppdbg",
-            "request": "attach",
-            "program": "enter program name, for example ${workspaceFolder}/a.out",
-            "MIMode": "lldb",
-            "args": ["BusportB","4003"]
+            "request": "launch",
+            "program": "${workspaceFolder}/server",
+            "args": ["BusportB","4003"],
+            "stopAtEntry": false,
+            "cwd": "${fileDirname}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "lldb"
         },
+            
 
 
 
