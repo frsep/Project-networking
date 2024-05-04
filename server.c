@@ -29,6 +29,7 @@ void server_listen(struct client_server *my_server){
         printf("%s", client_req);
         char respnce[] = "HTTP/1.1 200 OK\nContent-Type: text/html\n\n<html><body><h1>Hello, World!</h1></body></html>";
         send(accept_sock, respnce, sizeof(respnce), 0);
+        close(accept_sock);
     }
     
 }
