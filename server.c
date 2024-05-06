@@ -5,6 +5,24 @@
 #include <netinet/in.h>
 #include <unistd.h>
 
+typedef struct{
+    // departure-time,route-name,departing-from,arrival-time,arrival-station
+    char* departureTime;
+    char* routeName;
+    char* departingFrom;
+    char* arrivalTime;
+    char* arrivalStation;
+} route;
+
+struct station{
+    //  station-name,longitude,latitude,routes
+    char* stationName;
+    float longitude;
+    float latitude;
+    route departure[]; 
+}
+
+
 
 struct client_server{
     int browser_port;
