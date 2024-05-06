@@ -5,29 +5,46 @@
 #include <netinet/in.h>
 #include <unistd.h>
 
+//  JUST A VERY HELPFUL MACRO
+#define CHECKALLOC(p)	do { if((p) == NULL) { \
+    fprintf(stderr, "allocation failed - %s:%s(), line %d\n",__FILE__,__func__,__LINE__); \
+    exit(2); } \
+} while(false)
+
+
+// Departure struct to hold data of a single departure route in a Timetable
 typedef struct{
     // departure-time,route-name,departing-from,arrival-time,arrival-station
-    char* departureTime;
-    char* routeName;
-    char* departingFrom;
-    char* arrivalTime;
-    char* arrivalStation;
-} route;
+    int departureHour;
+    int departureMinute;
+    char *routeName;
+    char *departingFrom;
+    int arrivalHour;
+    int arrivalMinute;
+    char *arrivalStation;
+} departure;
 
-struct station{
+// Timetable struct to hold station name, lat/lon, and array of all departure routes
+struct timetable{
     //  station-name,longitude,latitude,routes
-    char* stationName;
+    char *stationName;
     float longitude;
     float latitude;
-    route departure[]; 
-}
-
-
+    departure *route; 
+};
 
 struct client_server{
     int browser_port;
     char name[256];
 };
+
+// Function to read csv file and load timetable data into structures.
+void read_timetable(){
+}
+
+// Function to evaluate the optimal route to destination
+void find_route(){
+}
 
 void server_listen(struct client_server *my_server){
     char client_req[1000];
