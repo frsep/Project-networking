@@ -90,7 +90,7 @@ class Stations:
                     # Extract query string from the request
                     query_string = ""
                     if "?" in request:
-                        query_string = request.split("?")[1].split()[0]
+                        query_string = request.split("?")[1].split()[0]  # Isolates destination from rest of the request
 
                     # Parse query string into a dictionary
                     form = cgi.FieldStorage(fp=None, environ={'QUERY_STRING': query_string})
