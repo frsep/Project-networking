@@ -68,9 +68,9 @@ struct timetable
 
 
 struct client_server
-{// SEPEH - could you please provide comments for what this struct is/does
+{// SEPEHR - could you please provide comments for what this struct is/does
     int browser_port;
-    char name[MAX_WORDSIZE]; //SEPEH - I've replaced with a pre-defined CONSTANT as best practise - delete this comment once read
+    char name[MAX_WORDSIZE]; //SEPEHR- I've replaced with a pre-defined CONSTANT as best practise - delete this comment once read
 };
 
 
@@ -154,7 +154,7 @@ void find_route()
 
 }
 
-// Sepeh - could you please provide comments?
+// Sepehr - could you please provide comments?
 void server_listen(struct client_server *my_server){
     char client_req[1000];
     int sock = socket(AF_INET, SOCK_STREAM, 0);
