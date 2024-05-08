@@ -60,7 +60,7 @@ void server_listen(struct client_server *my_server){
     socklen_t addrlen = sizeof(_addr);
     while(1){
         int accept_sock = accept(sock, (struct sockaddr*) &_addr, &addrlen);
-        read(accept_sock, client_req, sizeof(client_req));
+        int req = read(accept_sock, client_req, sizeof(client_req));
         printf("%s", client_req);
         char respnce[] = "HTTP/1.1 200 OK\nContent-Type: text/html\n\n<html><body><h1>Hello, World!</h1></body></html>";
         send(accept_sock, respnce, sizeof(respnce), 0);
