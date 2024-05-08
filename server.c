@@ -1,5 +1,5 @@
 //  -----------------------------------------------------------------------------------------
-//  PROJECT HEADERs
+//  PROJECT HEADER
 
 //  CITS3002 Project 1 2024
 //  Student1:   23715959    Malachy McGrath
@@ -106,9 +106,9 @@ void trim_line(char line[])
 
 void read_timetable(char filename[])
 {// Function to read csv file and load timetable data into structures.
-    FILE *tt = fopen(filename, "r");                   // attempt to open sysconfig file
+    FILE *tt = fopen(filename, "r");                   // attempt to open file
 
-    if(tt == NULL){                                    // checks for errors in opening sysconfig file
+    if(tt == NULL){                                    // checks for errors in opening file
         printf("could not open sysconfig file '%s'\n", filename);
         exit(EXIT_FAILURE);                             //terminates if file can't be opened
     }
@@ -154,7 +154,7 @@ void find_route()
 
 }
 
-// Sepehr - could you please provide comments?
+// SEPEHR - could you please provide comments?
 void server_listen(struct client_server *my_server){
     char client_req[1000];
     int sock = socket(AF_INET, SOCK_STREAM, 0);
