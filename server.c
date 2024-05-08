@@ -1,3 +1,18 @@
+//  -----------------------------------------------------------------------------------------
+//  PROJECT HEADERs
+
+//  CITS3002 Project 1 2024
+//  Student1:   23715959    Malachy McGrath
+//  Student2:   23616047    Fin     O'Loughlin
+//  Student3:   23342221    Sepehr  Amid
+//  Student4:   21713972    Josh    Ong
+
+
+//  myscheduler (v1.0)
+//  Compile with:  cc -std=c11 -Wall -Werror -o serverc server.c -lm
+
+
+//  -----------------------------------------------------------------------------------------
 //  HEADER FILES
 
 #include <sys/socket.h>
@@ -8,15 +23,14 @@
 #include <unistd.h>
 
 
+//  -----------------------------------------------------------------------------------------
 //  CONSTANTS
 
 #define CHAR_COMMENT                    '#'
 #define MAX_WORDSIZE                    256
- 
 
 
-
-
+//  -----------------------------------------------------------------------------------------
 //  PRE-PROCESSOR MACROS
 
 #define CHECKALLOC(p)   \
@@ -27,6 +41,7 @@
 } while(false)
 
 
+//  -----------------------------------------------------------------------------------------
 //  DATA STRUCTURES
 
 typedef struct
@@ -42,7 +57,7 @@ typedef struct
 
 
 struct timetable
-{   //  Timetable struct to hold station name, lat/lon, and array of all departure routes
+{// Timetable struct to hold station name, lat/lon, and array of all departure routes
     //  station-name,longitude,latitude,routes
     char *stationName;
     float longitude;
@@ -59,10 +74,11 @@ struct client_server
 };
 
 
+//  -----------------------------------------------------------------------------------------
 //  FUNCTIONS
 
 int is_comment_line(char line[])
-{ //checks if a line is a comment line
+{// checks if a line is a comment line
     int i = 0;
     while(isspace(line[i] != 0)){  //checks if character is a white space character
         ++i;
@@ -76,7 +92,7 @@ int is_comment_line(char line[])
 
 
 void trim_line(char line[])
-{ // removes trailing 'end-of-line' characters from the line
+{// removes trailing 'end-of-line' characters from the line
     int i = 0;
     while(line[i] != '\0') {// iterates through each character of the line
         if( line[i] == '\r' || line[i] == '\n'){ //checks for unwanted end of line characters and replaces with '\0'
@@ -87,8 +103,9 @@ void trim_line(char line[])
     }
 }
 
-// Function to read csv file and load timetable data into structures.
-void read_timetable(char filename[]){
+
+void read_timetable(char filename[])
+{// Function to read csv file and load timetable data into structures.
     FILE *tt = fopen(filename, "r");                   // attempt to open sysconfig file
 
     if(tt == NULL){                                    // checks for errors in opening sysconfig file
@@ -132,8 +149,9 @@ void read_timetable(char filename[]){
     fclose(tt); //closes timetable file when end of file reached
 }
 
-// Function to evaluate the optimal route to destination
-void find_route(){
+void find_route()
+{   // Function to evaluate the optimal route to destination (within file)
+
 }
 
 // Sepeh - could you please provide comments?
