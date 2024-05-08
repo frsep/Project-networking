@@ -1,3 +1,5 @@
+//  HEADER FILES
+
 #include <sys/socket.h>
 #include <string.h>
 #include <stdlib.h> 
@@ -5,12 +7,17 @@
 #include <netinet/in.h>
 #include <unistd.h>
 
-//  JUST A VERY HELPFUL MACRO
+
+//  PRE-PROCESSOR MACROS
+
+//  Check memory allocation worked
 #define CHECKALLOC(p)	do { if((p) == NULL) { \
     fprintf(stderr, "allocation failed - %s:%s(), line %d\n",__FILE__,__func__,__LINE__); \
     exit(2); } \
 } while(false)
 
+
+//  DATA STRUCTURES
 
 // Departure struct to hold data of a single departure route in a Timetable
 typedef struct{
@@ -30,22 +37,65 @@ struct timetable{
     char *stationName;
     float longitude;
     float latitude;
-    departure *route; 
+    departure *route;
+    int nroutes; 
 };
 
+// Sepeh - could you please provide comments?
 struct client_server{
     int browser_port;
     char name[256];
 };
 
 // Function to read csv file and load timetable data into structures.
-void read_timetable(){
+void read_timetable(char filename[]) 
+{
+        FILE *sys = fopen(filename, "r");                   // attempt to open sysconfig file
+
+        if(sys == NULL){                                    // checks for errors in opening sysconfig file
+            printf("could not open sysconfig file '%s'\n", filename);
+            exit(EXIT_FAILURE);                             //terminates if file can't be opened
+        }
+        //reading file
+        char line[BUFSIZ];// stores contents of one line at a time as a character array
+        while (fgets(line,sizeof line, sys) != NULL){//until a line is empty (end of file reached)
+
+            trim_line(line); // removes the \n or \r at end of line
+
+            if (is_comment_line(line) == 1){ //skips to next line if its a comment line
+                continue;
+                
+            }
+            if (device_or_timequantum(line) == 1){
+
+            char bin[BUFSIZ];
+            char readspeed[BUFSIZ];
+            char writespeed[BUFSIZ];
+
+                //colums are:   'device     devicename      readspeed       writespeed'
+            sscanf(line, "%s %s %s %s", bin, devices[n_devices].name, readspeed, writespeed);
+            devices[n_devices].readspeed = atoi(readspeed);
+            devices[n_devices].writespeed = atoi(writespeed);
+
+            ++n_devices;
+            } else if (device_or_timequantum(line) == 2){
+                char bin[BUFSIZ];
+                char timeqnt[BUFSIZ];
+
+                sscanf(line, "%s %s", bin, timeqnt);
+                time_quantum = atoi(timeqnt);
+            }
+
+        }
+        fclose(sys); //closes system config file when end of file reached
+
 }
 
 // Function to evaluate the optimal route to destination
 void find_route(){
 }
 
+// Sepeh - could you please provide comments?
 void server_listen(struct client_server *my_server){
     char client_req[1000];
     int sock = socket(AF_INET, SOCK_STREAM, 0);
