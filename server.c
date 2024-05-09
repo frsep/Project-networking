@@ -162,18 +162,18 @@ void server_listen(struct client_server *my_server){
     _addr.sin_family = AF_INET;
     _addr.sin_addr.s_addr = INADDR_ANY;
     _addr.sin_port = htons(my_server->browser_port);
-    
-
     int bind_sock = bind(sock,(struct sockaddr*) &_addr, sizeof(struct sockaddr_in));
     int listen_sock = listen(sock, 1);
     socklen_t addrlen = sizeof(_addr);
     while(1){
         int accept_sock = accept(sock, (struct sockaddr*) &_addr, &addrlen);
         read(accept_sock, client_req, sizeof(client_req));
+        // takes out the destination name out of the client_req string
         char* delim= "=";
         char* token;
         token = strtok(client_req, delim);
         token = strtok(NULL, delim);
+        // destination is the name of the destination station
         char destination[MAX_WORDSIZE];
         for (int i = 0; i < MAX_WORDSIZE; i++){
             if (token[i] == ' ') {
@@ -182,6 +182,7 @@ void server_listen(struct client_server *my_server){
             }
             destination[i] = token[i];
         }
+        // response is the response that the server will send to the client
         char respnce[] = "HTTP/1.1 200 OK\nContent-Type: text/html\n\n<html><body><h1>Hello, World!</h1></body></html>";
         send(accept_sock, respnce, sizeof(respnce), 0);
         close(accept_sock);
