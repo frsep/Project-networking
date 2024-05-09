@@ -1,0 +1,9 @@
+---
+triple:          'arm64-apple-darwin'
+binary-path:     '/Users/sepehramid/Project-networking/recieve'
+relocations:
+  - { offsetInCU: 0x26, offset: 0x26, size: 0x8, addend: 0x0, symName: _server_listen, symObjAddr: 0x0, symBinAddr: 0x100001528, symSize: 0x20C }
+  - { offsetInCU: 0x82, offset: 0x82, size: 0x8, addend: 0x0, symName: _server_listen, symObjAddr: 0x0, symBinAddr: 0x100001528, symSize: 0x20C }
+  - { offsetInCU: 0x175, offset: 0x175, size: 0x8, addend: 0x0, symName: __OSSwapInt16, symObjAddr: 0x20C, symBinAddr: 0x100001734, symSize: 0x24 }
+  - { offsetInCU: 0x19D, offset: 0x19D, size: 0x8, addend: 0x0, symName: _main, symObjAddr: 0x230, symBinAddr: 0x100001758, symSize: 0x98 }
+...
