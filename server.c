@@ -58,7 +58,6 @@ typedef struct
 
 struct timetable
 {// Timetable struct to hold station name, lat/lon, and array of all departure routes
-    //  station-name,longitude,latitude,routes
     char *stationName;
     float longitude;
     float latitude;
@@ -68,8 +67,7 @@ struct timetable
 
 
 struct client_server
-{// SEPEHR - could you please provide comments for what this struct is/does
-    // struct stores the inputs given into the program for the server
+{  // struct stores the inputs given into the program for the server
     int browser_port;
     int query_port;
     char name[MAX_WORDSIZE]; 
@@ -85,7 +83,7 @@ int is_comment_line(char line[])
     while(isspace(line[i] != 0)){  //checks if character is a white space character
         ++i;
     }
-    if (line[i] == '#'){
+    if (line[i] == CHAR_COMMENT){
         return true; //indicates the line is a comment line
     }else{
         return false; //indicates the line is not a comment line
@@ -156,10 +154,9 @@ void find_route()
 
 }
 
-// SEPEHR - could you please provide comments?
-void server_listen(struct client_server *my_server){
 
-    // creates socket and binds it to the browser port for TCP connection
+void server_listen(struct client_server *my_server)
+{   // creates socket and binds it to the browser port for TCP connection
     char client_req[1000];
     int sock = socket(AF_INET, SOCK_STREAM, 0);
     struct sockaddr_in tcp_addr;
@@ -186,7 +183,7 @@ void server_listen(struct client_server *my_server){
 
 
 
-    while(1){
+    while(true){
         int accept_sock = accept(sock, (struct sockaddr*) &tcp_addr, &addrlen);
         read(accept_sock, client_req, sizeof(client_req));
         // takes out the destination name out of the client_req string
