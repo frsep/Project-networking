@@ -9,18 +9,35 @@
 
 
 
-struct client_server
-{// SEPEHR - could you please provide comments for what this struct is/does
+struct client_server{
     int browser_port;
     int query_port;
-    char name[MAX_WORDSIZE]; //SEPEHR- I've replaced with a pre-defined CONSTANT as best practise - delete this comment once read
+    char name[MAX_WORDSIZE];
 };
 
+void browser_recievenrespond(int sock, struct client_server *my_server){
+    char client_req[1000];
+    read(sock, client_req, sizeof(client_req));
+    char* delim= "=";
+    char* token;
+    token = strtok(client_req, delim);
+    token = strtok(NULL, delim);
+    char destination[MAX_WORDSIZE];
+    for (int i = 0; i < MAX_WORDSIZE; i++){
+        if (token[i] == ' ') {
+            destination[i] = '\0';
+            break;
+        }
+        destination[i] = token[i];
+    }
+    char respnce[] = "HTTP/1.1 200 OK\nContent-Type: text/html\n\n<html><body><h1>HELLO WRLD!</h1></body></html>";
+    send(sock, respnce, sizeof(respnce), 0);
+    close(sock);
+}
 
 void server_listen(struct client_server *my_server){
 
     //  Create a socket and bind it to the browser port for TCP connection
-    char client_req[1000];
     int sock = socket(AF_INET, SOCK_STREAM, 0);
     struct sockaddr_in _addr;
     _addr.sin_family = AF_INET;
@@ -45,24 +62,8 @@ void server_listen(struct client_server *my_server){
 
 
     while(1){
-        int accept_sock = accept(sock, (struct sockaddr*) &_addr, &addrlen);
-        read(accept_sock, client_req, sizeof(client_req));
-        char* delim= "=";
-        char* token;
-        token = strtok(client_req, delim);
-        token = strtok(NULL, delim);
-        char destination[MAX_WORDSIZE];
-        for (int i = 0; i < MAX_WORDSIZE; i++){
-            if (token[i] == ' ') {
-                destination[i] = '\0';
-                break;
-            }
-            destination[i] = token[i];
-        }
-        char respnce[10000] = "HTTP/1.1 200 OK\nContent-Type: text/html\n\n<html><body><h1>HELLO WRLD!</h1></body></html>";
-        strcat(respnce, destination);
-        send(accept_sock, respnce, sizeof(respnce), 0);
-        close(accept_sock);
+        browser_recievenrespond(accept(sock, (struct sockaddr*) &_addr, &addrlen), my_server);
+
     }
     
 }
