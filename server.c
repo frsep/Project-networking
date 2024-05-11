@@ -29,7 +29,7 @@
 
 #define CHAR_COMMENT                    '#'
 #define MAX_WORDSIZE                    256
-
+#define MAX_THREADS                     100
 
 //  -----------------------------------------------------------------------------------------
 //  PRE-PROCESSOR MACROS
