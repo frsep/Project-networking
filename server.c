@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <netinet/in.h>
 #include <unistd.h>
+#include <stdbool.h>
 
 
 //  -----------------------------------------------------------------------------------------
@@ -77,17 +78,13 @@ struct client_server
 //  -----------------------------------------------------------------------------------------
 //  FUNCTIONS
 
-int is_comment_line(char line[])
+bool is_comment_line(char line[])
 {// checks if a line is a comment line
     int i = 0;
     while(isspace(line[i] != 0)){  //checks if character is a white space character
         ++i;
     }
-    if (line[i] == CHAR_COMMENT){
-        return true; //indicates the line is a comment line
-    }else{
-        return false; //indicates the line is not a comment line
-    }
+    return (line[i] == CHAR_COMMENT); //if comment is found, return true
 }
 
 
@@ -109,34 +106,29 @@ void read_timetable(char filename[])
     FILE *tt = fopen(filename, "r");                   // attempt to open file
 
     if(tt == NULL){                                    // checks for errors in opening file
-        printf("could not open sysconfig file '%s'\n", filename);
+        printf("could not open timetable file '%s'\n", filename);
         exit(EXIT_FAILURE);                             //terminates if file can't be opened
     }
     //reading file
     char line[BUFSIZ];// stores contents of one line at a time as a character array
     while (fgets(line,sizeof line, tt) != NULL){//until a line is empty (end of file reached)
-
         trim_line(line); // removes the \n or \r at end of line
-
-        if (is_comment_line(line) == 1){ //skips to next line if its a comment line
+        if (is_comment_line(line)){ //skips to next line if its a comment line
             continue;
         }
         
         // departure-time,route-name,departing-from,arrival-time,arrival-station
+        char bin[BUFSIZ];
+        char readspeed[BUFSIZ];
+        char writespeed[BUFSIZ];
+
+            //columns are:   'device     devicename      readspeed       writespeed'
+        sscanf(line, "%s %s %s %s", bin, devices[n_devices].name, readspeed, writespeed);
+        devices[n_devices].readspeed = atoi(readspeed);
+        devices[n_devices].writespeed = atoi(writespeed);
+
+        ++n_devices;
         
-        if (device_or_timequantum(line) == 1){
-
-            char bin[BUFSIZ];
-            char readspeed[BUFSIZ];
-            char writespeed[BUFSIZ];
-
-                //columns are:   'device     devicename      readspeed       writespeed'
-            sscanf(line, "%s %s %s %s", bin, devices[n_devices].name, readspeed, writespeed);
-            devices[n_devices].readspeed = atoi(readspeed);
-            devices[n_devices].writespeed = atoi(writespeed);
-
-            ++n_devices;
-        } 
         else if (device_or_timequantum(line) == 2){
             char bin[BUFSIZ];
             char timeqnt[BUFSIZ];
