@@ -40,11 +40,11 @@ typedef struct
 {   // Route struct to hold data of a single departure route in a Timetable
     int departureHour;
     int departureMinute;
-    char *routeName;
-    char *departingFrom;
+    char routeName[MAX_WORDSIZE];
+    char departingFrom[MAX_WORDSIZE];
     int arrivalHour;
     int arrivalMinute;
-    char *arrivalStation;
+    char arrivalStation[MAX_WORDSIZE];
 } route;
 
 struct timetable
@@ -53,15 +53,15 @@ struct timetable
     float longitude;
     float latitude;
     route departures[MAX_DEPARTURES];
-    int ndepartures; 
-};
+    int nroutes; 
+}
 
 struct client_server
 {  // struct stores the inputs given into the program for the server
     int browser_port;
     int query_port;
     char name[MAX_WORDSIZE]; 
-};
+}
 
 //  -----------------------------------------------------------------------------------------
 //  FUNCTIONS
@@ -88,6 +88,7 @@ void trim_line(char line[])
 
 void read_timetable(char filename[])
 {// Function to read csv file and load timetable data into structures.
+    struct timetable station;
     FILE *tt = fopen(filename, "r");                   // attempt to open file
     if(tt == NULL){                                    // checks for errors in opening file
         printf("could not open timetable file '%s'\n", filename);
@@ -95,31 +96,47 @@ void read_timetable(char filename[])
     }
     //reading file
     char line[BUFSIZ];// stores contents of one line at a time as a character array
+    bool stationUnread = true;
     while (fgets(line,sizeof line, tt) != NULL){//until a line is empty (end of file reached)
         trim_line(line); // removes the \n or \r at end of line
         if (is_comment_line(line)){ //skips to next line if its a comment line
             continue;
         }
-        
-        char departTime[MAX_WORDSIZE];
-        char routeName[MAX_WORDSIZE];
-        char departingFrom[MAX_WORDSIZE];
-        char arrivalTime[MAX_WORDSIZE];
-        char arrivalStation[MAX_WORDSIZE];
-
-        // departure-time,route-name,departing-from,arrival-time,arrival-station
-        sscanf(line, "%s %s %s %s", departTime, devices[n_devices].name, readspeed, writespeed);
-        devices[n_devices].readspeed = atoi(readspeed);
-        devices[n_devices].writespeed = atoi(writespeed);
-
-        ++n_devices;
+        if (stationUnread){ // handle station name and location (although lat and longitude not required)
+            // station-name,longitude,latitude
+            char stationName[MAX_WORDSIZE];
+            char longitude[MAX_WORDSIZE];
+            char latitude[MAX_WORDSIZE];
+            sscanf(line, "%s[^,] %s[^,] %s", stationName, longitude, latitude);
+            station.stationName = stationName;
+            station.longitude = atof(longitude);
+            station.latitude = atof(latitude);
+            stationUnread = false;
+        }
+        else{
+            // departure-time,route-name,departing-from,arrival-time,arrival-station
+            char departTime[MAX_WORDSIZE];
+            char routeName[MAX_WORDSIZE];
+            char departingFrom[MAX_WORDSIZE];
+            char arrivalTime[MAX_WORDSIZE];
+            char arrivalStation[MAX_WORDSIZE];
+            sscanf(line, "%s[^,] %s[^,] %s[^,] %s [^,]%s", departTime, routeName, departingFrom, arrivalTime, arrivalStation);
+            station.departures[station.nroutes].departureHour = atoi(departTime) / 100;
+            station.departures[station.nroutes].departureMinute = atoi(departTime) % 100;
+            station.departures[station.nroutes].routeName = routeName;
+            station.departures[station.nroutes].departingFrom = departingFrom;
+            station.departures[station.nroutes].arrivalHour = atoi(arrivalTime) / 100;
+            station.departures[station.nroutes].arrivalMinute = atoi(arrivalTime) % 100;
+            station.departures[station.nroutes].arrivalStation = arrivalStation;
+            ++ station.nroutes;
+        }
     }
     fclose(tt); //closes timetable file when end of file reached
 }
 
 void find_route()
 {   // Function to evaluate the optimal route to destination (within file)
-
+    
 }
 
 void server_listen(struct client_server *my_server)
