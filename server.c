@@ -17,6 +17,7 @@
 #include <netinet/in.h>
 #include <unistd.h>
 #include <stdbool.h>
+#include <time.h>
 
 //  -----------------------------------------------------------------------------------------
 //  CONSTANTS
@@ -86,6 +87,19 @@ void trim_line(char line[])
     }
 }
 
+time_t get_time()
+{
+  time_t rawtime;
+  struct tm * timeinfo;
+
+  time ( &rawtime );
+  timeinfo = localtime ( &rawtime );
+  if (debug){
+    printf ( "Current local time and date: %s", asctime (timeinfo) );
+  }
+  return rawtime;
+}
+
 void read_timetable(char filename[])
 {// Function to read csv file and load timetable data into structures.
     struct timetable station;
@@ -134,9 +148,31 @@ void read_timetable(char filename[])
     fclose(tt); //closes timetable file when end of file reached
 }
 
-void find_route()
-{   // Function to evaluate the optimal route to destination (within file)
+bool find_route(route *found, int departHour, int departMinute, char *arrivalStation)
+{   // Check for possible route to desired destination
     
+    route found;
+    for (int i = 0; i<station.nroutes; i++){
+        if (departHour < station.departures[i].departHour){
+            if (departMinute < station.departures[i].departMinute){
+                if (strcmp(station.departures[i].arrivalStation, arrivalStation)){
+                    found = station.departures[i];
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}
+
+void evaluate_routes()
+{
+    // Function to evaluate the optimal route to destination (within file)
+    // Get current time
+    // Call find route
+    // If not found ask all stations the curr Station has a route to for a path to destination.
+        // Pass current route to that station
+        // Return required route to the station appended to the current route.
 }
 
 void server_listen(struct client_server *my_server)
