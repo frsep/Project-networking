@@ -1,20 +1,15 @@
 //  -----------------------------------------------------------------------------------------
 //  PROJECT HEADER
-
 //  CITS3002 Project 1 2024
 //  Student1:   23715959    Malachy McGrath
 //  Student2:   23616047    Fin     O'Loughlin
 //  Student3:   23342221    Sepehr  Amid
 //  Student4:   21713972    Josh    Ong
-
-
 //  myscheduler (v1.0)
 //  Compile with:  cc -std=c11 -Wall -Werror -o serverc server.c -lm
 
-
 //  -----------------------------------------------------------------------------------------
 //  HEADER FILES
-
 #include <sys/socket.h>
 #include <string.h>
 #include <stdlib.h> 
@@ -23,10 +18,8 @@
 #include <unistd.h>
 #include <stdbool.h>
 
-
 //  -----------------------------------------------------------------------------------------
 //  CONSTANTS
-
 #define CHAR_COMMENT                    '#'
 #define MAX_WORDSIZE                    256
 #define MAX_THREADS                     100
@@ -34,7 +27,6 @@
 
 //  -----------------------------------------------------------------------------------------
 //  PRE-PROCESSOR MACROS
-
 #define CHECKALLOC(p)   \
     //  Check memory allocation worked
     do { if((p) == NULL) { \
@@ -42,10 +34,8 @@
     exit(2); } \
 } while(false)
 
-
 //  -----------------------------------------------------------------------------------------
 //  DATA STRUCTURES
-
 typedef struct
 {   // Route struct to hold data of a single departure route in a Timetable
     int departureHour;
@@ -57,7 +47,6 @@ typedef struct
     char *arrivalStation;
 } route;
 
-
 struct timetable
 {// Timetable struct to hold station name, lat/lon, and array of all departure routes
     char stationName[MAX_WORDSIZE];
@@ -67,7 +56,6 @@ struct timetable
     int ndepartures; 
 };
 
-
 struct client_server
 {  // struct stores the inputs given into the program for the server
     int browser_port;
@@ -75,10 +63,8 @@ struct client_server
     char name[MAX_WORDSIZE]; 
 };
 
-
 //  -----------------------------------------------------------------------------------------
 //  FUNCTIONS
-
 bool is_comment_line(char line[])
 {// checks if a line is a comment line
     int i = 0;
@@ -87,7 +73,6 @@ bool is_comment_line(char line[])
     }
     return (line[i] == CHAR_COMMENT); //if comment is found, return true
 }
-
 
 void trim_line(char line[])
 {// removes trailing 'end-of-line' characters from the line
@@ -101,11 +86,9 @@ void trim_line(char line[])
     }
 }
 
-
 void read_timetable(char filename[])
 {// Function to read csv file and load timetable data into structures.
     FILE *tt = fopen(filename, "r");                   // attempt to open file
-
     if(tt == NULL){                                    // checks for errors in opening file
         printf("could not open timetable file '%s'\n", filename);
         exit(EXIT_FAILURE);                             //terminates if file can't be opened
@@ -139,7 +122,6 @@ void find_route()
 
 }
 
-
 void server_listen(struct client_server *my_server)
 {   // creates socket and binds it to the browser port for TCP connection
     char client_req[1000];
@@ -155,7 +137,6 @@ void server_listen(struct client_server *my_server)
     int listen_sock = listen(sock, 1);
     socklen_t addrlen = sizeof(tcp_addr);
 
-
     // creates socket and binds it with the query port for UDP connection
     int sock2 = socket(AF_INET, SOCK_DGRAM, 0);
     struct sockaddr_in udp_addr;
@@ -165,8 +146,6 @@ void server_listen(struct client_server *my_server)
     int bind_udpsock = bind(sock2,(struct sockaddr*) &udp_addr, sizeof(struct sockaddr_in));
     int listen_udpsock = listen(sock2, 1);
     socklen_t addrlen2 = sizeof(udp_addr);
-
-
 
     while(true){
         int accept_sock = accept(sock, (struct sockaddr*) &tcp_addr, &addrlen);
@@ -190,8 +169,8 @@ void server_listen(struct client_server *my_server)
         send(accept_sock, respnce, sizeof(respnce), 0);
         close(accept_sock);
     }
-    
 }
+
 void communicate_with_other_server(){
     return;
 }
