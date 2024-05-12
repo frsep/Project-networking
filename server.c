@@ -30,6 +30,7 @@
 #define CHAR_COMMENT                    '#'
 #define MAX_WORDSIZE                    256
 #define MAX_THREADS                     100
+#define MAX_DEPARTURES                  100
 
 //  -----------------------------------------------------------------------------------------
 //  PRE-PROCESSOR MACROS
@@ -46,7 +47,7 @@
 //  DATA STRUCTURES
 
 typedef struct
-{   // Departure struct to hold data of a single departure route in a Timetable
+{   // Route struct to hold data of a single departure route in a Timetable
     int departureHour;
     int departureMinute;
     char *routeName;
@@ -54,16 +55,16 @@ typedef struct
     int arrivalHour;
     int arrivalMinute;
     char *arrivalStation;
-} departure;
+} route;
 
 
 struct timetable
 {// Timetable struct to hold station name, lat/lon, and array of all departure routes
-    char *stationName;
+    char stationName[MAX_WORDSIZE];
     float longitude;
     float latitude;
-    departure *route;
-    int nroutes; 
+    route departures[MAX_DEPARTURES];
+    int ndepartures; 
 };
 
 
@@ -117,26 +118,18 @@ void read_timetable(char filename[])
             continue;
         }
         
-        // departure-time,route-name,departing-from,arrival-time,arrival-station
-        char bin[BUFSIZ];
-        char readspeed[BUFSIZ];
-        char writespeed[BUFSIZ];
+        char departTime[MAX_WORDSIZE];
+        char routeName[MAX_WORDSIZE];
+        char departingFrom[MAX_WORDSIZE];
+        char arrivalTime[MAX_WORDSIZE];
+        char arrivalStation[MAX_WORDSIZE];
 
-            //columns are:   'device     devicename      readspeed       writespeed'
-        sscanf(line, "%s %s %s %s", bin, devices[n_devices].name, readspeed, writespeed);
+        // departure-time,route-name,departing-from,arrival-time,arrival-station
+        sscanf(line, "%s %s %s %s", departTime, devices[n_devices].name, readspeed, writespeed);
         devices[n_devices].readspeed = atoi(readspeed);
         devices[n_devices].writespeed = atoi(writespeed);
 
         ++n_devices;
-        
-        else if (device_or_timequantum(line) == 2){
-            char bin[BUFSIZ];
-            char timeqnt[BUFSIZ];
-
-            sscanf(line, "%s %s", bin, timeqnt);
-            time_quantum = atoi(timeqnt);
-        }
-
     }
     fclose(tt); //closes timetable file when end of file reached
 }
