@@ -9,7 +9,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/recieve",
-            "args": ["BusportB","4003"],
+            "args": ["BusportB","4003","4004", "localhost:4008","localhost:4010","localhost:4012"],
             "stopAtEntry": false,
             "cwd": "${fileDirname}",
             "environment": [],
