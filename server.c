@@ -1,38 +1,33 @@
 //  -----------------------------------------------------------------------------------------
 //  PROJECT HEADER
-
 //  CITS3002 Project 1 2024
 //  Student1:   23715959    Malachy McGrath
 //  Student2:   23616047    Fin     O'Loughlin
 //  Student3:   23342221    Sepehr  Amid
 //  Student4:   21713972    Josh    Ong
-
-
 //  myscheduler (v1.0)
 //  Compile with:  cc -std=c11 -Wall -Werror -o serverc server.c -lm
 
-
 //  -----------------------------------------------------------------------------------------
 //  HEADER FILES
-
 #include <sys/socket.h>
 #include <string.h>
 #include <stdlib.h> 
 #include <stdio.h>
 #include <netinet/in.h>
 #include <unistd.h>
-
+#include <stdbool.h>
+#include <time.h>
 
 //  -----------------------------------------------------------------------------------------
 //  CONSTANTS
-
 #define CHAR_COMMENT                    '#'
 #define MAX_WORDSIZE                    256
 #define MAX_THREADS                     100
+#define MAX_DEPARTURES                  100
 
 //  -----------------------------------------------------------------------------------------
 //  PRE-PROCESSOR MACROS
-
 #define CHECKALLOC(p)   \
     //  Check memory allocation worked
     do { if((p) == NULL) { \
@@ -40,56 +35,45 @@
     exit(2); } \
 } while(false)
 
-
 //  -----------------------------------------------------------------------------------------
 //  DATA STRUCTURES
-
 typedef struct
-{   // Departure struct to hold data of a single departure route in a Timetable
+{   // Route struct to hold data of a single departure route in a Timetable
     int departureHour;
     int departureMinute;
-    char *routeName;
-    char *departingFrom;
+    char routeName[MAX_WORDSIZE];
+    char departingFrom[MAX_WORDSIZE];
     int arrivalHour;
     int arrivalMinute;
-    char *arrivalStation;
-} departure;
-
+    char arrivalStation[MAX_WORDSIZE];
+} route;
 
 struct timetable
 {// Timetable struct to hold station name, lat/lon, and array of all departure routes
-    char *stationName;
+    char stationName[MAX_WORDSIZE];
     float longitude;
     float latitude;
-    departure *route;
+    route departures[MAX_DEPARTURES];
     int nroutes; 
-};
-
+}
 
 struct client_server
 {  // struct stores the inputs given into the program for the server
     int browser_port;
     int query_port;
     char name[MAX_WORDSIZE]; 
-};
-
+}
 
 //  -----------------------------------------------------------------------------------------
 //  FUNCTIONS
-
-int is_comment_line(char line[])
+bool is_comment_line(char line[])
 {// checks if a line is a comment line
     int i = 0;
     while(isspace(line[i] != 0)){  //checks if character is a white space character
         ++i;
     }
-    if (line[i] == CHAR_COMMENT){
-        return true; //indicates the line is a comment line
-    }else{
-        return false; //indicates the line is not a comment line
-    }
+    return (line[i] == CHAR_COMMENT); //if comment is found, return true
 }
-
 
 void trim_line(char line[])
 {// removes trailing 'end-of-line' characters from the line
@@ -103,57 +87,93 @@ void trim_line(char line[])
     }
 }
 
+time_t get_time()
+{
+  time_t rawtime;
+  struct tm * timeinfo;
+
+  time ( &rawtime );
+  timeinfo = localtime ( &rawtime );
+  if (debug){
+    printf ( "Current local time and date: %s", asctime (timeinfo) );
+  }
+  return rawtime;
+}
 
 void read_timetable(char filename[])
 {// Function to read csv file and load timetable data into structures.
+    struct timetable station;
     FILE *tt = fopen(filename, "r");                   // attempt to open file
-
     if(tt == NULL){                                    // checks for errors in opening file
-        printf("could not open sysconfig file '%s'\n", filename);
+        printf("could not open timetable file '%s'\n", filename);
         exit(EXIT_FAILURE);                             //terminates if file can't be opened
     }
     //reading file
     char line[BUFSIZ];// stores contents of one line at a time as a character array
+    bool stationUnread = true;
     while (fgets(line,sizeof line, tt) != NULL){//until a line is empty (end of file reached)
-
         trim_line(line); // removes the \n or \r at end of line
-
-        if (is_comment_line(line) == 1){ //skips to next line if its a comment line
+        if (is_comment_line(line)){ //skips to next line if its a comment line
             continue;
         }
-        
-        // departure-time,route-name,departing-from,arrival-time,arrival-station
-        
-        if (device_or_timequantum(line) == 1){
-
-            char bin[BUFSIZ];
-            char readspeed[BUFSIZ];
-            char writespeed[BUFSIZ];
-
-                //columns are:   'device     devicename      readspeed       writespeed'
-            sscanf(line, "%s %s %s %s", bin, devices[n_devices].name, readspeed, writespeed);
-            devices[n_devices].readspeed = atoi(readspeed);
-            devices[n_devices].writespeed = atoi(writespeed);
-
-            ++n_devices;
-        } 
-        else if (device_or_timequantum(line) == 2){
-            char bin[BUFSIZ];
-            char timeqnt[BUFSIZ];
-
-            sscanf(line, "%s %s", bin, timeqnt);
-            time_quantum = atoi(timeqnt);
+        if (stationUnread){ // handle station name and location (although lat and longitude not required)
+            // station-name,longitude,latitude
+            char stationName[MAX_WORDSIZE];
+            char longitude[MAX_WORDSIZE];
+            char latitude[MAX_WORDSIZE];
+            sscanf(line, "%s[^,] %s[^,] %s", stationName, longitude, latitude);
+            station.stationName = stationName;
+            station.longitude = atof(longitude);
+            station.latitude = atof(latitude);
+            stationUnread = false;
         }
-
+        else{
+            // departure-time,route-name,departing-from,arrival-time,arrival-station
+            char departTime[MAX_WORDSIZE];
+            char routeName[MAX_WORDSIZE];
+            char departingFrom[MAX_WORDSIZE];
+            char arrivalTime[MAX_WORDSIZE];
+            char arrivalStation[MAX_WORDSIZE];
+            sscanf(line, "%s[^,] %s[^,] %s[^,] %s [^,]%s", departTime, routeName, departingFrom, arrivalTime, arrivalStation);
+            station.departures[station.nroutes].departureHour = atoi(departTime) / 100;
+            station.departures[station.nroutes].departureMinute = atoi(departTime) % 100;
+            station.departures[station.nroutes].routeName = routeName;
+            station.departures[station.nroutes].departingFrom = departingFrom;
+            station.departures[station.nroutes].arrivalHour = atoi(arrivalTime) / 100;
+            station.departures[station.nroutes].arrivalMinute = atoi(arrivalTime) % 100;
+            station.departures[station.nroutes].arrivalStation = arrivalStation;
+            ++ station.nroutes;
+        }
     }
     fclose(tt); //closes timetable file when end of file reached
 }
 
-void find_route()
-{   // Function to evaluate the optimal route to destination (within file)
-
+bool find_route(route *found, int departHour, int departMinute, char *arrivalStation)
+{   // Check for possible route to desired destination
+    
+    route found;
+    for (int i = 0; i<station.nroutes; i++){
+        if (departHour < station.departures[i].departHour){
+            if (departMinute < station.departures[i].departMinute){
+                if (strcmp(station.departures[i].arrivalStation, arrivalStation)){
+                    found = station.departures[i];
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
 }
 
+void evaluate_routes()
+{
+    // Function to evaluate the optimal route to destination (within file)
+    // Get current time
+    // Call find route
+    // If not found ask all stations the curr Station has a route to for a path to destination.
+        // Pass current route to that station
+        // Return required route to the station appended to the current route.
+}
 
 void server_listen(struct client_server *my_server)
 {   // creates socket and binds it to the browser port for TCP connection
@@ -170,7 +190,6 @@ void server_listen(struct client_server *my_server)
     int listen_sock = listen(sock, 1);
     socklen_t addrlen = sizeof(tcp_addr);
 
-
     // creates socket and binds it with the query port for UDP connection
     int sock2 = socket(AF_INET, SOCK_DGRAM, 0);
     struct sockaddr_in udp_addr;
@@ -180,8 +199,6 @@ void server_listen(struct client_server *my_server)
     int bind_udpsock = bind(sock2,(struct sockaddr*) &udp_addr, sizeof(struct sockaddr_in));
     int listen_udpsock = listen(sock2, 1);
     socklen_t addrlen2 = sizeof(udp_addr);
-
-
 
     while(true){
         int accept_sock = accept(sock, (struct sockaddr*) &tcp_addr, &addrlen);
@@ -205,8 +222,8 @@ void server_listen(struct client_server *my_server)
         send(accept_sock, respnce, sizeof(respnce), 0);
         close(accept_sock);
     }
-    
 }
+
 void communicate_with_other_server(){
     return;
 }

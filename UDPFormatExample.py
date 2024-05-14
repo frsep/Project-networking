@@ -1,4 +1,4 @@
-# Construct response data with multiple segments and specify the intermediate station
+# Example data
 response_data = '''Type_Response
 Data_10:00 AM,Route 1,Station3,10:15 AM,Route 1,Warwick-Stn;10:15 AM,Route 1,Warwick-Stn,10:30 AM,Perth-Stn;10:40 AM,Route 2,Perth-Stn,11:00 AM,Glendalough-Stn;11:10 AM,Route 3,Glendalough-Stn,11:30 AM,Greenwood-Stn'''
 
