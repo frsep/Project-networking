@@ -26,12 +26,13 @@ Two things need to be comunnicated:
 3. Its route up to this point
     # This gets appended to each time the query is sent to another station
     # It can also be used to make sure you don't forward a query on to a station that has already seen it
-'Type_Query\nDestination_Station4\nData_10:00 AM,Route 1,Station3,10:15 AM,Route 1,Warwick-Stn;10:15 AM,Route 1,Warwick-Stn,10:30 AM,Perth-Stn;10:40 AM,Route 2,Perth-Stn,11:00 AM,Glendalough-Stn'
+'Type_Query\nDestination_Station4\nData_10:00,Route 1,Station3,10:15,Route 1,Warwick-Stn;10:15,Route 1,Warwick-Stn,10:30,Perth-Stn;10:40,Route 2,Perth-Stn,11:00,Glendalough-Stn'
 
 --------------------Responses----------------------
 Four things need to be comunnicated:
 1. that the message is a response
 2. whether the server could succesfully find a route
+    Success or Failure
 3. Intended final destination - so the receiver can keep track of what query this response is related to
     Note: I'm keeping track of what servers are waiting for things and the response arrays using
     (destination, departure time leaving current station) because I think it's a reasonable unique key for each
@@ -43,14 +44,14 @@ Example showing a successful response of a trip from Station3 to Perth-Stn
 'Type_Response
 Result_Success
 Destination_Perth-Stn
-Data_10:00 AM,Route 1,Station3,10:15 AM,Route 1,Warwick-Stn;10:15 AM,Route 1,Warwick-Stn,10:30 AM,Perth-Stn'
+Data_10:00,Route 1,Station3,10:15,Route 1,Warwick-Stn;10:15,Route 1,Warwick-Stn,10:30,Perth-Stn'
 '''
 
 # Example data
 
 response_data = '''Type_Query
 Destination_Station4
-Data_10:00 AM,Route 1,Station3,10:15 AM,Route 1,Warwick-Stn;10:15 AM,Route 1,Warwick-Stn,10:30 AM,Perth-Stn;10:40 AM,Route 2,Perth-Stn,11:00 AM,Glendalough-Stn;11:10 AM,Route 3,Glendalough-Stn,11:30 AM,Greenwood-Stn'''
+Data_10:00,Route 1,Station3,10:15,Route 1,Warwick-Stn;10:15,Route 1,Warwick-Stn,10:30,Perth-Stn;10:40,Route 2,Perth-Stn,11:00,Glendalough-Stn;11:10,Route 3,Glendalough-Stn,11:30,Greenwood-Stn'''
 
 # Parse the response
 response = {}
