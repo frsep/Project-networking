@@ -149,7 +149,7 @@ void read_timetable(char filename[])
 }
 
 bool find_route(route *found, int departHour, int departMinute, char *arrivalStation)
-{   // Check for possible route to desired destination
+{// Check for possible route to desired destination
     
     route found;
     for (int i = 0; i<station.nroutes; i++){
@@ -165,9 +165,12 @@ bool find_route(route *found, int departHour, int departMinute, char *arrivalSta
     return false;
 }
 
+// process messages received from / sent to stations - b   
+
+
+
 void evaluate_routes()
-{
-    // Function to evaluate the optimal route to destination (within file)
+{// Function to evaluate the optimal route to destination (within file)
     // Get current time
     // Call find route
     // If not found ask all stations the curr Station has a route to for a path to destination.
