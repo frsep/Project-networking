@@ -7,6 +7,15 @@ import typing
 import select
 
 
+def send_udp_message(message, addrport):
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+            s.sendto(message.encode(), addrport)
+            print(f"Sending: {message}")
+    except Exception as e:
+        print(f"Error sending message to server on port {addrport}: {e}")
+
+
 class Stations:
     # def __init__(self, name, browser_port, query_port, *neighbour_query_ports):
     def __init__(self, name: str, browser_port: int, query_port: int, neighbours: typing.List[str]):
@@ -14,10 +23,10 @@ class Stations:
         self.name = name
         self.query_port = query_port
         self.neighbours = neighbours
-        self.neighbour_names = {}  # Dictionary with key = station name, value = socket of server
+        self.neighbour_names = {}  # Dictionary with key = station name, value = address of server
 
-        self.server_connections = {}  # Dictionary with key = (destination, departure from this station), value = socket of server that queried
-        self.server_responses = {}  # Dictionary with key = (destination, departure from this station), value = response array
+        self.servers_waiting = {}  # Dictionary with key = (destination, departure from this station), value = name of station that queried
+        self.responses = {}  # Dictionary with key = (destination, departure from this station), value = response array
 
         self.client_connections = {}  # Dictionary with key = (destination, departure from this station), value = socket
 
@@ -103,8 +112,12 @@ class Stations:
                                     pass  # Already been seen and recorded
                                 else:
                                     self.neighbour_names[name] = (
-                                    addr, int(port))  # Adds to list of active stations for ease of access
+                                        addr, int(port))  # Adds to list of active stations for ease of access
                                     self.send_name(neighbour)
+                    elif message["Type"] == "Query":
+                        self.handle_query(data.decode())
+                    elif message["Type"] == "Response":
+                        self.handle_response(data.decode())
                     print(f"UDP datagram received from {address}: {data.decode('utf-8')}")
 
             for s in exceptional:
@@ -113,7 +126,7 @@ class Stations:
                     outputs.remove(s)
                 s.close()
 
-            for key, response_array in self.server_responses:
+            for key, response_array in self.responses.items():
                 num_responses = len(response_array)
                 if num_responses == len(self.neighbours):  # Response array is full, all servers responded
                     if self.client_connections[key]:  # Query about this destination at this time came from our client
@@ -123,23 +136,14 @@ class Stations:
                         self.client_connections[key].sendall(http_response.encode('utf-8'))
                 elif num_responses == len(
                         self.neighbours) - 1:  # Response array is full, all servers responded except for the one that asked
-                    if self.server_connections[key]:  # Query about this destination at this time came from a neighbouring server
-                        server_socket = self.server_connections[key]
+                    if self.servers_waiting[key]:  # Query came from a neighbouring server
                         print(f"Sending stored response to server!")
-                        response_content = self.best_response(response_array)
-                        self.forward_response(response_content, server_socket)
-
-    def send_udp_message(self, message, addrport):
-        try:
-            with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
-                s.sendto(message.encode(), addrport)
-                print(f"Sending: {message}")
-        except Exception as e:
-            print(f"Error sending message to server on port {addrport}: {e}")
+                        self.create_response(self.best_response(response_array),
+                                             self.neighbour_names[self.servers_waiting[key]])
 
     def send_name(self, neighbour):
         addr, port = neighbour.split(':')
-        self.send_udp_message(f"Type_Name\nData_{self.name};{self.query_port}", (addr, int(port)))
+        send_udp_message(f"Type_Name\nData_{self.name};{self.query_port}", (addr, int(port)))
 
     def handle_tcp_request(self, tcp_socket):
         connection, address = tcp_socket.accept()
@@ -170,8 +174,13 @@ class Stations:
                 connection.sendall(http_response.encode('utf-8'))
             else:
                 # Send UDP requests at this point
-                # Store response content along with client socket
-                self.client_connections[dest, datetime.datetime.now().strftime('%H:%M')] = connection
+                for name, address in self.neighbour_names.items():  # Sends query out to all neighbours
+                    send_udp_message(self.create_query(dest, name), address)
+                    self.responses[dest, datetime.datetime.now().strftime('%H:%M')][
+                        0] = []
+                    self.client_connections[dest, datetime.datetime.now().strftime('%H:%M')][
+                        0] = connection
+
         else:
             response_content = "<h1>No destination parameter found!</h1>"
             http_response = f"HTTP/1.1 200 OK\r\nContent-Length: {len(response_content)}\r\n\r\n{response_content}"
@@ -183,41 +192,52 @@ class Stations:
         return "A"
 
     def create_query(self, final_destination, neighbour):
-        query = f"Type_Query\nDestination_{final_destination}\nData_{self.best_route(neighbour)};"
+        return f"Type_Query\nDestination_{final_destination}\nData_{self.best_route(neighbour)};"
 
-    def handle_query(self, query: dict):
+    def handle_query(self, message):
         # Extract information from the query
-
+        query = self.parse_message(message)
         destination = query["Destination"]
         data = query["Data"]
-
-        # Parse the data part
         segments = query["Segments"]
-        this_station = self.name
+
+        # Determine the sending station
+        last_station = segments[-1]["departing_from"]
 
         # Check if this station has already been visited in the query
         for segment in segments:
-            if segment["arrival_station"] == this_station:
+            if segment["departing_from"] == self.name:  # Station already queried
                 # Respond with no route found
-                return f"No route found from {this_station} to {destination}"
+                self.create_response(message, self.neighbour_names[last_station], False)  # Respond Fail
 
-        # Determine the source station
-        last_station = segments[-1]["departing_from"]
-        self.forward_query(data, last_station)
+        if self.best_route(destination):  # This station has a direct route to final destination
+            self.create_response(str(data) + "\n" + self.best_route(destination), self.neighbour_names[last_station], True)
+            # Respond by adding servers route to destination and return to sender
 
-    def forward_query(self, query, last_station):
+        self.forward_query(data)
+
+    def forward_query(self, query):
+        exclude = [segment["departing-from"] for segment in query["Segments"]]
         # send to all neighbors
-        for key, neighbour_socket in self.server_connections:
-            pass
-        pass
+        for name, address in self.neighbour_names:
+            if name not in exclude:  # Skip over neighbours that have already seen this query
+                message = query + f"\n{self.best_route(name)}"  # Add route to next query receiver
+                send_udp_message(message, address)
 
-    def create_response(self):
-        pass
+    def create_response(self, response, address, result):
+        if result:
+            send_udp_message(f"Type_Response\nResult_Success\nData_{response};", address)
+        else:
+            send_udp_message(f"Type_Response\nResult_Fail\nData_{response};", address)
 
-    def handle_response(self):
-        pass
+    def handle_response(self, message):
+        response = self.parse_message(message)
+        for segment in response["Segments"]:
+            if segment["departing-from"] == self.name:
+                # Appends dictionary to the response array - to be dealt with in the main loop when full
+                self.responses[(response["Destination"], segment["departure-time"])].append(response)
 
-    def forward_response(self, response, receiver_socket):
+    def forward_response(self, response):
         pass
 
     def parse_message(self, msg):
