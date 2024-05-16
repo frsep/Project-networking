@@ -28,7 +28,6 @@
 #define MAX_HOPS                        100
 #define MAX_DEPARTURES                  100
 #define DEBUG                           true
-#define MSG_LINES                       4
 
 //  -----------------------------------------------------------------------------------------
 //  PRE-PROCESSOR MACROS
@@ -50,14 +49,13 @@ typedef struct
     char arrivalStation[MAX_WORDSIZE];
 } route;
 
-
-struct message
+typedef struct
 {// Message struct to hold contents of a message
     char dataType[MAX_WORDSIZE];
     char result[MAX_WORDSIZE];
     char destination[MAX_WORDSIZE];
     route data[MAX_HOPS];
-}
+} message;
 
 struct timetable
 {// Timetable struct to hold station name, lat/lon, and array of all departure routes
@@ -78,23 +76,23 @@ struct client_server
 //  -----------------------------------------------------------------------------------------
 //  FUNCTIONS
 // process messages received from / sent to stations 
-void parse_message(char* msg)
+void parse_message(message* message, char* msg)
 {// Parse message into its component parts and store in message struct
     char *line;
     char key[MAX_WORDSIZE];
     char msg_data[MAX_LINESIZE];
     line = strtok(msg, "/n");
-    sscanf(line, "%s_%s", key, message.datatype);
+    sscanf(line, "%s_%s", key, message->dataType);
     line = strtok(NULL, "/n");
-    sscanf(line, "%s_%s", key, message.result);
+    sscanf(line, "%s_%s", key, message->result);
     line = strtok(NULL, "/n");
-    sscanf(line, "%s_%s", key, message.destination);
+    sscanf(line, "%s_%s", key, message->destination);
     line = strtok(NULL, "/n");
     sscanf(line, "%s_%s", key, msg_data);
-    parse_data(msg_data)
+    parse_data(message, msg_data)
 }
 
-void parse_data(char* msg_data)
+void parse_data(message* message, char* msg_data)
 {// Parse data into its component hops
     int hop = 0;
     char msg_hop[MAX_LINESIZE];
@@ -106,11 +104,11 @@ void parse_data(char* msg_data)
 
     while (sscanf(msg_data, "%s;%s", msg_hop, msg_data) > 0){
         sscanf( msg_hop, "%s, %s, %s, %s, %s", departTime, routeName, departingFrom, arrivalTime, arrivalStation);
-                    message.data[hop].departureTime = atoi(departTime);
-            strcpy( message.data[hop].routeName, routeName);
-            strcpy( message.data[hop].departingFrom, departingFrom);
-                    message.data[hop].arrivalTime = atoi(arrivalTime);
-            strcpy( message.data[hop].arrivalStation, arrivalStation);      
+                message->data[hop].departureTime = atoi(departTime);
+        strcpy( message->data[hop].routeName, routeName);
+        strcpy( message->data[hop].departingFrom, departingFrom);
+                message->data[hop].arrivalTime = atoi(arrivalTime);
+        strcpy( message->data[hop].arrivalStation, arrivalStation);      
         ++hop; 
     }
 }
@@ -130,8 +128,28 @@ void handle_response(message){
 void handle_query(message){
 
 }
-void create_query(final_destination, neighbour){
-    
+void create_query(char *final_destination, , int time)
+{// Create query to Final Destination
+    char *query[MAX_LINESIZE];
+    char *hop[MAX_LINESIZE];
+    find_route(hop);
+    query = strcpy(query, "Type_Query\n");
+    query = strcat(query, strcat(strcat("Destination_", final_destination), "/n"));
+    query = strcat(query, strcat(strcat("Data_", hop), "/n"));
+}
+
+bool find_route(route *found, int departTime, char *arrivalStation)
+{// Check for possible route to desired destination within current station
+    route found;
+    for (int i = 0; i<station.nroutes; i++){
+        if (departTime < station.departures[i].departTime){
+            if (strcmp(station.departures[i].arrivalStation, arrivalStation)){
+                found = station.departures[i];
+                return true;
+            } 
+        }
+    }
+    return false;
 }
 
 
@@ -203,7 +221,7 @@ void read_timetable(char filename[])
             char departingFrom[MAX_WORDSIZE];
             char arrivalTime[MAX_WORDSIZE];
             char arrivalStation[MAX_WORDSIZE];
-            sscanf( line, "%s[^,] %s[^,] %s[^,] %s [^,]%s", departTime, routeName, departingFrom, arrivalTime, arrivalStation);
+            sscanf( line, "%s, %s, %s, %s, %s", departTime, routeName, departingFrom, arrivalTime, arrivalStation);
                     station.departures[station.nroutes].departureTime = atoi(departTime);
             strcpy( station.departures[station.nroutes].routeName, routeName);
             strcpy( station.departures[station.nroutes].departingFrom, departingFrom);
@@ -215,31 +233,6 @@ void read_timetable(char filename[])
     fclose(tt); //closes timetable file when end of file reached
 }
 
-bool find_route(route *found, int departHour, int departMinute, char *arrivalStation)
-{// Check for possible route to desired destination within current station
-    route found;
-    for (int i = 0; i<station.nroutes; i++){
-        if (departHour < station.departures[i].departHour){
-            if (departMinute < station.departures[i].departMinute){
-                if (strcmp(station.departures[i].arrivalStation, arrivalStation)){
-                    found = station.departures[i];
-                    return true;
-                }
-            }
-        }
-    }
-    return false;
-}
-
-
-void evaluate_routes()
-{// Function to evaluate the optimal route to destination (within file)
-    // Get current time
-    // Call find route
-    // If not found ask all stations the curr Station has a route to for a path to destination.
-        // Pass current route to that station
-        // Return required route to the station appended to the current route.
-}
 
 void server_listen(struct client_server *my_server)
 {   // creates socket and binds it to the browser port for TCP connection
