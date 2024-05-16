@@ -17,34 +17,38 @@ def send_udp_message(message, addrport):
 
 
 def parse_message(msg):
-    result = {}
-    for line in msg.split('\n'):
-        parts = line.split('_')
-        key = parts[0].strip()
-        value = parts[1].strip()
-        result[key] = value
-    msg_type = result["Type"]
+    try:
+        result = {}
+        for line in msg.split('\n'):
+            parts = line.split('_')
+            key = parts[0].strip()
+            value = parts[1].strip()
+            result[key] = value
+        msg_type = result["Type"]
 
-    data = result["Data"]
-    if msg_type != "Name":
-        segments = []
-        segment_data = data.split(';')
-        for segment_str in segment_data:
-            segment_parts = segment_str.split(',')
-            departure_time = segment_parts[0].strip()
-            route_name = segment_parts[1].strip()
-            departing_from = segment_parts[2].strip()
-            arrival_time = segment_parts[3].strip()
-            arrival_station = segment_parts[4].strip()
-            segments.append({
-                'departure_time': departure_time,
-                'route_name': route_name,
-                'departing_from': departing_from,
-                'arrival_time': arrival_time,
-                'arrival_station': arrival_station
-            })
-            result["Segments"] = segments
-    return result
+        data = result["Data"]
+        if msg_type != "Name":
+            segments = []
+            segment_data = data.split(';')
+            for segment_str in segment_data:
+                segment_parts = segment_str.split(',')
+                departure_time = segment_parts[0].strip()
+                route_name = segment_parts[1].strip()
+                departing_from = segment_parts[2].strip()
+                arrival_time = segment_parts[3].strip()
+                arrival_station = segment_parts[4].strip()
+                segments.append({
+                    'departure_time': departure_time,
+                    'route_name': route_name,
+                    'departing_from': departing_from,
+                    'arrival_time': arrival_time,
+                    'arrival_station': arrival_station
+                })
+                result["Segments"] = segments
+        return result
+    except Exception as e:
+        print(f"Error parsing message: {e}")
+        return None
 
 
 def best_response(response_array):
@@ -115,14 +119,25 @@ class Stations:
         # return f"<h2>The best route from {self.name} to {destination} is to take {route_name} at {earliest_departure_time}<h2>"
 
     def listen(self):
-        # Create a TCP socket
-        tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        tcp_socket.bind(('127.0.0.1', int(self.browser_port)))
-        tcp_socket.listen(5)
+        try:
+            # Create a TCP socket
+            tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            tcp_socket.bind(('127.0.0.1', int(self.browser_port)))
+            tcp_socket.listen(5)
+        except socket.error as e:
+            print(f"TCP socket could not be created: {e}")
+            sys.exit(1)
 
-        # Create socket for UDP queries
-        query_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        query_socket.bind(('127.0.0.1', int(self.query_port)))
+        try:
+
+            # Create socket for UDP queries
+            query_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            query_socket.bind(('127.0.0.1', int(self.query_port)))
+        except socket.error as e:
+            print(f"UDP socket could not be created: {e}")
+            tcp_socket.close()
+            sys.exit(1)
+
         inputs = [tcp_socket, query_socket]
         outputs = []
 
@@ -196,8 +211,11 @@ class Stations:
                                                  self.neighbour_names[self.servers_waiting[key]], True)
 
     def send_name(self, neighbour):
-        addr, port = neighbour.split(':')
-        send_udp_message(f"Type_Name\nData_{self.name};{self.query_port}", (addr, int(port)))
+        try:
+            addr, port = neighbour.split(':')
+            send_udp_message(f"Type_Name\nData_{self.name};{self.query_port}", (addr, int(port)))
+        except Exception as e:
+            print(f"Failed to send name to {neighbour}: {e}")
 
     def handle_tcp_request(self, tcp_socket):
         connection, address = tcp_socket.accept()
@@ -244,11 +262,17 @@ class Stations:
             connection.sendall(http_response.encode('utf-8'))
 
     def create_query(self, final_destination, neighbour):
-        return f"Type_Query\nDestination_{final_destination}\nData_{self.best_route(neighbour, datetime.datetime.now().strftime('%H:%M'))};"
+        try:
+            return f"Type_Query\nDestination_{final_destination}\nData_{self.best_route(neighbour, datetime.datetime.now().strftime('%H:%M'))};"
+        except Exception as e:
+            print(f"Error creating query: {e}")
 
     def handle_query(self, message):
         # Extract information from the query
         query = parse_message(message)
+        if query is None:
+            print("Failed to parse message")
+            return
         destination = query["Destination"]
         data = query["Data"]
         segments = query["Segments"]
@@ -272,23 +296,36 @@ class Stations:
 
     def forward_query(self, message):
         query = parse_message(message)
-        exclude = [segment["departing-from"] for segment in query["Segments"]]
-        forwarded = False
-        # send to all neighbors
-        for name, address in self.neighbour_names.items():
-            if name not in exclude:  # Skip over neighbours that have already seen this query
-                new_message = message + f';{self.best_route(name, datetime.datetime.strftime(query["Segments"][-1]["arrival-time"], "%H:%M"))}'  # Add route to next query receiver
-                send_udp_message(new_message, address)
-                forwarded = True
-        if not forwarded:  # All neighbours have already been queried
-            self.create_response(message, self.neighbour_names[query["Segments"][-1]["departing_from"]],
-                                 False)  # Respond Fail
+        if query is None:
+            print("Failed to parse message")
+            return
+        try:
+            exclude = [segment["departing-from"] for segment in query["Segments"]]
+            forwarded = False
+            # send to all neighbors
+            for name, address in self.neighbour_names.items():
+                if name not in exclude:  # Skip over neighbours that have already seen this query
+                    new_message = message + f';{self.best_route(name, datetime.datetime.strftime(query["Segments"][-1]["arrival-time"], "%H:%M"))}'  # Add route to next query receiver
+                    send_udp_message(new_message, address)
+                    forwarded = True
+            if not forwarded:  # All neighbours have already been queried
+                self.create_response(message, self.neighbour_names[query["Segments"][-1]["departing_from"]],
+                                    False)  # Respond Fail
+        except Exception as e:
+            print(f"Error forwarding query: {e}")
 
     def create_response(self, message, address, result):
         response = parse_message(message)
-        segments = response["Segments"]
-        destination = response["Destination"]
-        new_response = str(response["Data"]) + "\n" + self.best_route(destination, segments[-1]["arrival-time"])
+        if response is None:
+            print("Failed to parse message")
+            return
+        try:
+            segments = response["Segments"]
+            destination = response["Destination"]
+            new_response = str(response["Data"]) + "\n" + self.best_route(destination, segments[-1]["arrival-time"])
+        except Exception as e:
+            print(f"Failed to create response: {e}")
+            return
         if result:
             send_udp_message(f"Type_Response\nResult_Success\nData_{new_response};", address)
         else:
@@ -296,10 +333,16 @@ class Stations:
 
     def handle_response(self, message):
         response = parse_message(message)
-        for segment in response["Segments"]:
-            if segment["departing-from"] == self.name:
-                # Appends dictionary to the response array - to be dealt with in the main loop when full
-                self.responses[(response["Destination"], segment["departure-time"])].append(response)
+        if response is None:
+            print("Failed to parse message")
+            return
+        try:
+            for segment in response["Segments"]:
+                if segment["departing-from"] == self.name:
+                    # Appends dictionary to the response array - to be dealt with in the main loop when full
+                    self.responses[(response["Destination"], segment["departure-time"])].append(response)
+        except Exception as e:
+            print(f"Failed to handle response: {e}")
 
 
 def main(name: str, browser_port: str, query_port: str, neighbours: typing.List[str]):
