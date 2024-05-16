@@ -5,8 +5,6 @@
 //  Student2:   23616047    Fin     O'Loughlin
 //  Student3:   23342221    Sepehr  Amid
 //  Student4:   21713972    Josh    Ong
-//  myscheduler (v1.0)
-//  Compile with:  cc -std=c11 -Wall -Werror -o serverc server.c -lm
 
 //  -----------------------------------------------------------------------------------------
 //  HEADER FILES
@@ -75,7 +73,6 @@ struct client_server
 
 //  -----------------------------------------------------------------------------------------
 //  FUNCTIONS
-// process messages received from / sent to stations 
 void parse_message(message* message, char* msg)
 {// Parse message into its component parts and store in message struct
     char *line;
@@ -125,26 +122,36 @@ void create_response(message, address, result){
 void handle_response(message){
 
 }
-void handle_query(message){
+void handle_query(char *msg)
+{
+    message *message;
+    parse_message(message, msg);
+    if (DEBUG && message == NULL){
+        printf("Failed to parse message/n");
+    }
+    
+
+
 
 }
-void create_query(char *final_destination, , int time)
+
+void create_query(char *final_destination, ,int time)
 {// Create query to Final Destination
     char *query[MAX_LINESIZE];
     char *hop[MAX_LINESIZE];
-    find_route(hop);
+    find_route(hop, time, final_destination);
     query = strcpy(query, "Type_Query\n");
     query = strcat(query, strcat(strcat("Destination_", final_destination), "/n"));
     query = strcat(query, strcat(strcat("Data_", hop), "/n"));
 }
 
-bool find_route(route *found, int departTime, char *arrivalStation)
+bool find_route(route *found, int time, char *final_destination)
 {// Check for possible route to desired destination within current station
     route found;
-    for (int i = 0; i<station.nroutes; i++){
-        if (departTime < station.departures[i].departTime){
-            if (strcmp(station.departures[i].arrivalStation, arrivalStation)){
-                found = station.departures[i];
+    for (int i = 0; i<station->nroutes; i++){
+        if (time < station->departures[i].departTime){
+            if (strcmp(station->departures[i].arrivalStation, final_destination)){
+                found = station->departures[i];
                 return true;
             } 
         }
@@ -187,9 +194,8 @@ time_t get_time()
   return rawtime;
 }
 
-void read_timetable(char filename[])
+void read_timetable(char filename[], struct timetable *station)
 {// Function to read csv file and load timetable data into structures.
-    struct timetable station;
     FILE *tt = fopen(filename, "r");                   // attempt to open file
     if(tt == NULL){                                    // checks for errors in opening file
         printf("could not open timetable file '%s'\n", filename);
@@ -209,9 +215,9 @@ void read_timetable(char filename[])
             char longitude[MAX_WORDSIZE];
             char latitude[MAX_WORDSIZE];
             sscanf(line, "%s, %s, %s", stationName, longitude, latitude);
-            strcpy( station.stationName, stationName);
-            station.longitude = atof(longitude);
-            station.latitude = atof(latitude);
+            strcpy( station->stationName, stationName);
+            station->longitude = atof(longitude);
+            station->latitude = atof(latitude);
             stationUnread = false;
         }
         else{
@@ -222,12 +228,12 @@ void read_timetable(char filename[])
             char arrivalTime[MAX_WORDSIZE];
             char arrivalStation[MAX_WORDSIZE];
             sscanf( line, "%s, %s, %s, %s, %s", departTime, routeName, departingFrom, arrivalTime, arrivalStation);
-                    station.departures[station.nroutes].departureTime = atoi(departTime);
-            strcpy( station.departures[station.nroutes].routeName, routeName);
-            strcpy( station.departures[station.nroutes].departingFrom, departingFrom);
-                    station.departures[station.nroutes].arrivalTime = atoi(arrivalTime);
-            strcpy( station.departures[station.nroutes].arrivalStation, arrivalStation);
-            ++station.nroutes;
+                    station->departures[station->nroutes]->departureTime = atoi(departTime);
+            strcpy( station->departures[station->nroutes]->routeName, routeName);
+            strcpy( station->departures[station->nroutes]->departingFrom, departingFrom);
+                    station->departures[station->nroutes]->arrivalTime = atoi(arrivalTime);
+            strcpy( station->departures[station->nroutes]->arrivalStation, arrivalStation);
+            ++station->nroutes;
         }
     }
     fclose(tt); //closes timetable file when end of file reached
