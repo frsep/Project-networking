@@ -180,7 +180,7 @@ class Stations:
 
             for key, response_array in list(self.responses.items()):
                 num_responses = len(response_array)
-                if num_responses == len(self.neighbours):  # Response array is full, all servers responded
+                if num_responses == len(self.neighbour_names):  # Response array is full, all servers responded
                     if key in self.client_connections.keys():  # Query about this destination at this time came from our client
                         print(f"Sending stored response to client!")
                         response_content = best_response(response_array)
@@ -188,13 +188,14 @@ class Stations:
                             http_response = f"HTTP/1.1 200 OK\r\nContent-Length: {len(response_content)}\r\n\r\n{response_content}"
                             self.client_connections[key].sendall(http_response.encode('utf-8'))
                         else:  # No route found
+                            print("No Route Found")
                             response_content = "No route found"
                             http_response = f"HTTP/1.1 200 OK\r\nContent-Length: {len(response_content)}\r\n\r\n{response_content}"
                             self.client_connections[key].sendall(http_response.encode('utf-8'))
                         del self.client_connections[key]
                         del self.responses[key]
                 elif num_responses == len(
-                        self.neighbours) - 1:  # Response array is full, all servers responded except for the one that asked
+                        self.neighbour_names) - 1:  # Response array is full, all servers responded except for the one that asked
                     if key in self.servers_waiting.keys():  # Query came from a neighbouring server
                         print(f"Sending stored response to server!")
                         best_route = best_response(response_array)
@@ -301,7 +302,7 @@ class Stations:
             # send to all neighbors
             for name, address in self.neighbour_names.items():
                 if name not in exclude:  # Skip over neighbours that have already seen this query
-                    new_message = message + f';{self.best_route(name, datetime.datetime.strftime(query["Segments"][-1]["arrival_time"], "%H:%M"))}'  # Add route to next query receiver
+                    new_message = message + f';{self.best_route(name, query["Segments"][-1]["arrival_time"])}'  # Add route to next query receiver
                     send_udp_message(new_message, address)
                     forwarded = True
             if not forwarded:  # All neighbours have already been queried
