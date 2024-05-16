@@ -47,6 +47,8 @@ void process_message(char* message, struct client_server *my_server){
         strcpy(my_server->neighbour_list[my_server->neighbours_added].name, name);
         my_server->neighbour_list[my_server->neighbours_added].added = true;
         my_server->neighbours_added++;
+        char* own_name = create_name_message(my_server);
+        send_udp(atoi(token2), own_name);
         return;
     }
     if(!isdigit(message[0])){
@@ -109,7 +111,7 @@ void* udp_port(struct client_server *my_server){
     return NULL;
 }
 
-void send_name_out(struct client_server *my_server){
+char* create_name_message(struct client_server *my_server){
     char temp[MAX_WORDSIZE];
     char temp2[MAX_WORDSIZE];
     strcpy(temp, "Type_Name/n");
@@ -117,6 +119,11 @@ void send_name_out(struct client_server *my_server){
     strcat(temp, ";");
     sprintf(temp2, "%d", my_server->query_port);
     strcat(temp, temp2);
+    return temp;
+}
+
+void send_name_out(struct client_server *my_server){
+    char* temp = create_name_message(my_server);
     while(1){
         for(int i = 0; i < my_server->neighbour_count; i++){
             if(my_server->neighbour_list[i].added == false){
@@ -133,6 +140,7 @@ void send_name_out(struct client_server *my_server){
 
 
 void server_listen(struct client_server *my_server){
+    send_name_out(my_server);
     /*
     struct sockaddr_in udp_addr, other_serv_addr;
     int udp_sock = socket(AF_INET, SOCK_DGRAM, 0);
