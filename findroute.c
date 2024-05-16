@@ -111,32 +111,33 @@ void parse_data(message* message, char* msg_data)
     }
 }
 
-void handle_response(message){
+void handle_response(message)
+{// incomplete
 
 }
 
-void best_response(response_array){
+void best_response(response_array)
+{// incomplete
 
 }
 
-void create_response(message, address, result){
+void create_response(message, address, result)
+{// incomplete
 
 }
 
-void handle_response(message){
+void handle_response(message)
+{//incomplete
 
 }
 
 void handle_query(char *msg)
-{
+{// incomplete
     message *message;
     parse_message(message, msg);
     if (DEBUG && message == NULL){
         printf("Failed to parse message/n");
     }
-    
-
-
 
 }
 
@@ -212,7 +213,7 @@ void trim_line(char line[])
 }
 
 time_t get_time()
-{
+{ // will need to convert to int?
   time_t rawtime;
   struct tm * timeinfo;
 
