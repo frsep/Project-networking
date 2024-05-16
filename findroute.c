@@ -52,8 +52,9 @@ typedef struct
 struct message
 {// Message struct to hold contents of a message
     char dataType[MAX_WORDSIZE];
-    route hop[MAX_HOPS];
-
+    char result[MAX_WORDSIZE];
+    char destination[MAX_WORDSIZE];
+    route data[MAX_HOPS];
 }
 
 struct timetable
@@ -74,6 +75,31 @@ struct client_server
 
 //  -----------------------------------------------------------------------------------------
 //  FUNCTIONS
+// process messages received from / sent to stations 
+char* parse_message(char* msg)
+{// Parse message into its component parts and store in message struct
+    strtok
+}
+void handle_response(message){
+
+}
+void best_response(response_array){
+
+}
+void create_response(message, address, result){
+
+}
+void handle_response(message){
+
+}
+void handle_query(message){
+
+}
+void create_query(final_destination, neighbour){
+    
+}
+
+
 bool is_comment_line(char line[])
 {// checks if a line is a comment line
     int i = 0;
@@ -130,7 +156,7 @@ void read_timetable(char filename[])
             char longitude[MAX_WORDSIZE];
             char latitude[MAX_WORDSIZE];
             sscanf(line, "%s, %s, %s", stationName, longitude, latitude);
-            station.stationName = stationName;
+            strcpy( station.stationName, stationName);
             station.longitude = atof(longitude);
             station.latitude = atof(latitude);
             stationUnread = false;
@@ -142,21 +168,20 @@ void read_timetable(char filename[])
             char departingFrom[MAX_WORDSIZE];
             char arrivalTime[MAX_WORDSIZE];
             char arrivalStation[MAX_WORDSIZE];
-            sscanf(line, "%s[^,] %s[^,] %s[^,] %s [^,]%s", departTime, routeName, departingFrom, arrivalTime, arrivalStation);
-            station.departures[station.nroutes].departureTime = atoi(departTime);
-            station.departures[station.nroutes].routeName = routeName;
-            station.departures[station.nroutes].departingFrom = departingFrom;
-            station.departures[station.nroutes].arrivalTime = atoi(arrivalTime);
-            station.departures[station.nroutes].arrivalStation = arrivalStation;
-            ++ station.nroutes;
+            sscanf( line, "%s[^,] %s[^,] %s[^,] %s [^,]%s", departTime, routeName, departingFrom, arrivalTime, arrivalStation);
+                    station.departures[station.nroutes].departureTime = atoi(departTime);
+            strcpy( station.departures[station.nroutes].routeName, routeName);
+            strcpy( station.departures[station.nroutes].departingFrom, departingFrom);
+                    station.departures[station.nroutes].arrivalTime = atoi(arrivalTime);
+            strcpy( station.departures[station.nroutes].arrivalStation, arrivalStation);
+            ++station.nroutes;
         }
     }
     fclose(tt); //closes timetable file when end of file reached
 }
 
 bool find_route(route *found, int departHour, int departMinute, char *arrivalStation)
-{// Check for possible route to desired destination
-    
+{// Check for possible route to desired destination within current station
     route found;
     for (int i = 0; i<station.nroutes; i++){
         if (departHour < station.departures[i].departHour){
@@ -171,28 +196,6 @@ bool find_route(route *found, int departHour, int departMinute, char *arrivalSta
     return false;
 }
 
-// process messages received from / sent to stations 
-char* parse_message(msg){
-    
-}
-void handle_response(message){
-
-}
-void best_response(response_array){
-
-}
-void create_response(message, address, result){
-
-}
-void handle_response(message){
-
-}
-void handle_query(message){
-
-}
-void create_query(final_destination, neighbour){
-    
-}
 
 void evaluate_routes()
 {// Function to evaluate the optimal route to destination (within file)
@@ -257,10 +260,10 @@ void communicate_with_other_server(){
 }
 
 int main(int argc, char const *argv[]){
-    struct client_server my_server;
-    my_server.query_port = atoi(argv[3]);
-    my_server.browser_port = atoi(argv[2]);
-    strcpy(my_server.name, argv[1]);
-    server_listen(&my_server);
+    // struct client_server my_server;
+    // my_server.query_port = atoi(argv[3]);
+    // my_server.browser_port = atoi(argv[2]);
+    // strcpy(my_server.name, argv[1]);
+    // server_listen(&my_server);
     return 0;
 }
