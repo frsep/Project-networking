@@ -3,7 +3,7 @@
 Any message between servers will follow the same format. First, the main point is to separate different pieces of info
 and describe what that information is. This is done by separating the type of info from its value with an '_'
     Ex. Variable_Value      # Capitalisation matters
-Each variable or piece of information is seperated by a '\n' or newline
+Each variable or piece of information is separated by a '\n' or newline
     ex. Variable_Value\nVariable2_ValueTwo
 
 In the case of separating trip segments or legs of the trip, each segment is separated by a semicolon ';'
@@ -13,14 +13,15 @@ The format for each segment is:
 Meaning the overall Data variable is laid out like:
     Data_departure-time,route-name,departing-from,arrival-time,arrival-station;departure-time2,route-name2,departing-from2,arrival-time2,arrival-station2
 ---------------------Names-------------------------
-Two things need to be comunnicated:
+Two things need to be communicated:
 1. That it is sending a name
 2. Its name and query port
 'Type_Name/nData_StationC;4006'
 Note: I've put them into data so that the function that parses the message can do the same thing for all types. Open to
 changing it if people have better ideas
+
 ---------------------Queries-----------------------
-Two things need to be comunnicated:
+Two things need to be communicated:
 1. That it is sending a Query
 2. Its final destination
 3. Its route up to this point
@@ -29,9 +30,9 @@ Two things need to be comunnicated:
 'Type_Query\nDestination_Station4\nData_10:00,Route 1,Station3,10:15,Route 1,Warwick-Stn;10:15,Route 1,Warwick-Stn,10:30,Perth-Stn;10:40,Route 2,Perth-Stn,11:00,Glendalough-Stn'
 
 --------------------Responses----------------------
-Four things need to be comunnicated:
+Four things need to be communicated:
 1. that the message is a response
-2. whether the server could succesfully find a route
+2. whether the server could successfully find a route
     Success or Failure
 3. Intended final destination - so the receiver can keep track of what query this response is related to
     Note: I'm keeping track of what servers are waiting for things and the response arrays using
