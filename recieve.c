@@ -13,22 +13,42 @@
 #define MAX_WORDSIZE                    256
 #define MAX_STATIONS                     100
 
-
-
+struct neighbours{
+    int port;
+    char name[MAX_WORDSIZE];
+    bool added;
+};
 
 struct client_server{
     int browser_port;
     int query_port;
-    int* neighbour_ports;
     int neighbour_count;
     char name[MAX_WORDSIZE];
     char messages[MAX_WORDSIZE][MAX_STATIONS];
     int messages_count;
     char message_out[MAX_WORDSIZE];
     bool message_out_flag;
+    struct neighbours *neighbour_list;
+    int neighbours_added;
 };
 
 void process_message(char* message, struct client_server *my_server){
+    if(message[5] == "N"){
+        char* delim= ";";
+        char* delim2= "\n";
+        char* token;
+        char* token2;
+        char* name;
+        token = strtok(message, delim);
+        token2 = strtok(NULL, delim);
+        strcpy(my_server->neighbour_list[my_server->neighbours_added].port, aoti(token2));
+        strtok(token, delim2);
+        name = strtok(NULL, delim2);
+        strcpy(my_server->neighbour_list[my_server->neighbours_added].name, name);
+        my_server->neighbour_list[my_server->neighbours_added].added = true;
+        my_server->neighbours_added++;
+        return;
+    }
     if(!isdigit(message[0])){
         strcpy(my_server->messages[my_server->messages_count], message);
         my_server->messages_count++;
@@ -41,7 +61,6 @@ void process_message(char* message, struct client_server *my_server){
         strcpy(my_server->message_out, temp);
         my_server->message_out_flag = true;
     }
-
 }
 
 void send_udp(int port_number, char* message){
@@ -92,13 +111,25 @@ void* udp_port(struct client_server *my_server){
 
 void send_name_out(struct client_server *my_server){
     char temp[MAX_WORDSIZE];
-    sprintf(temp, "%d", my_server->query_port);
-    strcat(temp, ",");
+    char temp2[MAX_WORDSIZE];
+    strcpy(temp, "Type_Name/n");
     strcat(temp, my_server->name);
-    for(int i = 0; i < my_server->neighbour_count; i++){
-            send_udp(my_server->neighbour_ports[i], temp);
+    strcat(temp, ";");
+    sprintf(temp2, "%d", my_server->query_port);
+    strcat(temp, temp2);
+    while(1){
+        for(int i = 0; i < my_server->neighbour_count; i++){
+            if(my_server->neighbour_list[i].added == false){
+                send_udp(my_server->neighbour_list[i].port, temp);
+            }
         }
-    }   
+        if(my_server->neighbours_added == my_server->neighbour_count){
+            break;
+        }
+    }
+    return;
+}
+     
 
 
 void server_listen(struct client_server *my_server){
@@ -227,7 +258,7 @@ void server_listen(struct client_server *my_server){
         char temp[MAX_WORDSIZE];
         sprintf(temp, "%d", my_server->query_port);
         for(int i = 0; i < my_server->neighbour_count; i++){
-            send_udp(my_server->neighbour_ports[i], temp);
+            send_udp(my_server->neighbour_list[i].port, temp);
         }
         while(1){
             if(my_server->messages_count == my_server->neighbour_count){
@@ -260,24 +291,32 @@ void server_listen(struct client_server *my_server){
 
 int main(int argc, char const *argv[]){
     struct client_server my_server;
+    my_server.neighbours_added = 0;
     my_server.messages_count = 0;
     memset(my_server.message_out, '\0', sizeof(my_server.message_out));
     bool message_out_flag = false;
     for (int i = 0; i < MAX_STATIONS; i++){
         strcpy(my_server.messages[i], "\0");
     }
-    my_server.neighbour_ports = malloc(sizeof(int)*(argc-4));
     int num_neighbours = argc-4;
-    char temp[MAX_WORDSIZE];
     my_server.neighbour_count = num_neighbours;
+
+    /**/
+    my_server.neighbour_list = (struct neighbours*)malloc(num_neighbours*sizeof(struct neighbours));
+
+    char temp[MAX_WORDSIZE];
     for(int i = 0; i < num_neighbours; i++){
         strcpy((char*)temp, (char*)argv[4+i]);
         // split temp with ":" and store in a new array
         char* port_str = strtok(temp, ":");
         char* ip_str = strtok(NULL, ":");
         // Store port_str and ip_str in separate arrays if needed
-        my_server.neighbour_ports[i] = atoi(ip_str);
+        my_server.neighbour_list[i].port = atoi(ip_str);
+        my_server.neighbour_list[i].added = false;
     }
+
+
+
     my_server.query_port = atoi(argv[3]);
     my_server.browser_port = atoi(argv[2]);
     strcpy(my_server.name, argv[1]);
