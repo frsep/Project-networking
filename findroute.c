@@ -53,6 +53,7 @@ typedef struct
     char result[MAX_WORDSIZE];
     char destination[MAX_WORDSIZE];
     route data[MAX_HOPS];
+    int nhops;
 } message;
 
 struct timetable
@@ -91,7 +92,6 @@ void parse_message(message* message, char* msg)
 
 void parse_data(message* message, char* msg_data)
 {// Parse data into its component hops
-    int hop = 0;
     char msg_hop[MAX_LINESIZE];
     char departTime[MAX_WORDSIZE];
     char routeName[MAX_WORDSIZE];
@@ -99,14 +99,15 @@ void parse_data(message* message, char* msg_data)
     char arrivalTime[MAX_WORDSIZE];
     char arrivalStation[MAX_WORDSIZE];
 
+    message->nhops = 0;
     while (sscanf(msg_data, "%s;%s", msg_hop, msg_data) > 0){
         sscanf( msg_hop, "%s, %s, %s, %s, %s", departTime, routeName, departingFrom, arrivalTime, arrivalStation);
-                message->data[hop].departureTime = atoi(departTime);
-        strcpy( message->data[hop].routeName, routeName);
-        strcpy( message->data[hop].departingFrom, departingFrom);
-                message->data[hop].arrivalTime = atoi(arrivalTime);
-        strcpy( message->data[hop].arrivalStation, arrivalStation);      
-        ++hop; 
+                message->data[message->nhops].departureTime = atoi(departTime);
+        strcpy( message->data[message->nhops].routeName, routeName);
+        strcpy( message->data[message->nhops].departingFrom, departingFrom);
+                message->data[message->nhops].arrivalTime = atoi(arrivalTime);
+        strcpy( message->data[message->nhops].arrivalStation, arrivalStation);      
+        ++message->nhops;
     }
 }
 
@@ -145,18 +146,24 @@ void create_query(char *final_destination, ,int time)
     query = strcat(query, strcat(strcat("Data_", hop), "/n"));
 }
 
-bool find_route(route *found, int time, char *final_destination)
-{// Check for possible route to desired destination within current station
+bool find_route(route *found, int time, char *destination)
+{// Check for possible route to destination within current station
     route found;
     for (int i = 0; i<station->nroutes; i++){
         if (time < station->departures[i].departTime){
-            if (strcmp(station->departures[i].arrivalStation, final_destination)){
+            if (strcmp(station->departures[i].arrivalStation, destination)){
                 found = station->departures[i];
                 return true;
             } 
         }
     }
     return false;
+}
+
+void route_string(route *found, char *sRoute)
+{// converts route to string
+    strcpy(sRoute, route->)
+
 }
 
 
