@@ -22,11 +22,13 @@
 //  -----------------------------------------------------------------------------------------
 //  CONSTANTS
 #define CHAR_COMMENT                    '#'
-#define MAX_WORDSIZE                    256
+#define MAX_WORDSIZE                    60 
+#define MAX_LINESIZE                    256 
 #define MAX_THREADS                     100
 #define MAX_HOPS                        100
 #define MAX_DEPARTURES                  100
 #define DEBUG                           true
+#define MSG_LINES                       4
 
 //  -----------------------------------------------------------------------------------------
 //  PRE-PROCESSOR MACROS
@@ -76,10 +78,43 @@ struct client_server
 //  -----------------------------------------------------------------------------------------
 //  FUNCTIONS
 // process messages received from / sent to stations 
-char* parse_message(char* msg)
+void parse_message(char* msg)
 {// Parse message into its component parts and store in message struct
-    strtok
+    char *line;
+    char key[MAX_WORDSIZE];
+    char msg_data[MAX_LINESIZE];
+    line = strtok(msg, "/n");
+    sscanf(line, "%s_%s", key, message.datatype);
+    line = strtok(NULL, "/n");
+    sscanf(line, "%s_%s", key, message.result);
+    line = strtok(NULL, "/n");
+    sscanf(line, "%s_%s", key, message.destination);
+    line = strtok(NULL, "/n");
+    sscanf(line, "%s_%s", key, msg_data);
+    parse_data(msg_data)
 }
+
+void parse_data(char* msg_data)
+{// Parse data into its component hops
+    int hop = 0;
+    char msg_hop[MAX_LINESIZE];
+    char departTime[MAX_WORDSIZE];
+    char routeName[MAX_WORDSIZE];
+    char departingFrom[MAX_WORDSIZE];
+    char arrivalTime[MAX_WORDSIZE];
+    char arrivalStation[MAX_WORDSIZE];
+
+    while (sscanf(msg_data, "%s;%s", msg_hop, msg_data) > 0){
+        sscanf( msg_hop, "%s, %s, %s, %s, %s", departTime, routeName, departingFrom, arrivalTime, arrivalStation);
+                    message.data[hop].departureTime = atoi(departTime);
+            strcpy( message.data[hop].routeName, routeName);
+            strcpy( message.data[hop].departingFrom, departingFrom);
+                    message.data[hop].arrivalTime = atoi(arrivalTime);
+            strcpy( message.data[hop].arrivalStation, arrivalStation);      
+        ++hop; 
+    }
+}
+
 void handle_response(message){
 
 }
