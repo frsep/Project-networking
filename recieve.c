@@ -12,12 +12,32 @@
 
 #define MAX_WORDSIZE                    256
 #define MAX_STATIONS                     100
+#define MAX_DEPARTURES                  100
+
 
 struct neighbours{
     int port;
     char name[MAX_WORDSIZE];
     bool added;
 };
+
+typedef struct
+{   // Route struct to hold data of a single departure route
+    int departureTime;
+    char routeName[MAX_WORDSIZE];
+    char departingFrom[MAX_WORDSIZE];
+    int arrivalTime;
+    char arrivalStation[MAX_WORDSIZE];
+} route;
+
+struct timetable
+{// Timetable struct to hold station name, lat/lon, and array of all departure routes
+    char stationName[MAX_WORDSIZE];
+    float longitude;
+    float latitude;
+    route departures[MAX_DEPARTURES];
+    int nroutes; 
+}
 
 struct client_server{
     int browser_port;
