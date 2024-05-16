@@ -114,15 +114,19 @@ void parse_data(message* message, char* msg_data)
 void handle_response(message){
 
 }
+
 void best_response(response_array){
 
 }
+
 void create_response(message, address, result){
 
 }
+
 void handle_response(message){
 
 }
+
 void handle_query(char *msg)
 {
     message *message;
@@ -136,7 +140,7 @@ void handle_query(char *msg)
 
 }
 
-void create_query(char *final_destination, ,int time)
+void create_query(char *final_destination, int time)
 {// Create query to Final Destination
     char *query[MAX_LINESIZE];
     char *hop[MAX_LINESIZE];
@@ -146,9 +150,9 @@ void create_query(char *final_destination, ,int time)
     query = strcat(query, strcat(strcat("Data_", hop), "/n"));
 }
 
-bool find_route(route *found, int time, char *destination)
+bool find_route(char *hop, int time, char *destination)
 {// Check for possible route to destination within current station
-    route found;
+    route *found;
     for (int i = 0; i<station->nroutes; i++){
         if (time < station->departures[i].departTime){
             if (strcmp(station->departures[i].arrivalStation, destination)){
@@ -160,10 +164,29 @@ bool find_route(route *found, int time, char *destination)
     return false;
 }
 
-void route_string(route *found, char *sRoute)
-{// converts route to string
-    strcpy(sRoute, route->)
-
+void route_string(route *found, char *hop)
+{// converts route to string representing that hop
+    char departHour[MAX_WORDSIZE];
+    char departMinute[MAX_WORDSIZE];
+    char arrivalHour[MAX_WORDSIZE];
+    char arrivalMinute[MAX_WORDSIZE];
+    sprintf(departHour, "%d", found->departureTime / 100);
+    sprintf(departMinute, "%d", found->departureTime % 100);
+    strcat(departHour, ":");
+    strcat(departHour, departMinute);
+    strcpy(hop, departHour);
+    strcat(hop, ",");
+    strcat(hop, found->routeName);
+    strcat(hop, ",");
+    strcat(hop, found->departingFrom);
+    strcat(hop, ",");
+    sprintf(arrivalHour, "%d", found->arrivalTime / 100);
+    sprintf(arrivalMinute, "%d", found->arrivalTime % 100);
+    strcat(arrivalHour, ":");
+    strcat(arrivalHour, arrivalMinute);
+    strcat(hop, arrivalHour);
+    strcat(hop, ",");
+    strcat(hop, found->arrivalStation);
 }
 
 
