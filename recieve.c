@@ -16,11 +16,11 @@
 #define DEBUG                           1
 #define CHAR_COMMENT                    '#'
 // structs
-struct neighbours{
+typedef struct{
     int port;
     char name[MAX_WORDSIZE];
     bool added;
-};
+} neighbours;
 
 typedef struct
 {   // Route struct to hold data of a single departure route
@@ -61,9 +61,10 @@ struct timetable
     float latitude;
     route departures[MAX_DEPARTURES];
     int nroutes;
-}
+};
 
-struct client_server{
+struct client_server
+{
     int browser_port;
     int query_port;
     int neighbour_count;
@@ -74,7 +75,7 @@ struct client_server{
     response responses[MAX_STATIONS];
     int responses_count;
     int neighbours_added;
-}
+};
 
 // functions
 bool find_route(route *found, int time, char *final_destination, struct timetable *station)
