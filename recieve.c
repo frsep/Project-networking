@@ -269,7 +269,7 @@ void create_query(char* query, route* route)
     strcpy (query, temp);
 }
 
-void create_response(char* neg_or_pos, response* message){
+char* create_response(char* neg_or_pos, response* message){
     char response[MAX_WORDSIZE];
     char temp[MAX_WORDSIZE];
     strcpy(response, "Type_Response\n");
@@ -302,6 +302,7 @@ void create_response(char* neg_or_pos, response* message){
     sprintf(temp, "%d:%d", message->data[message->currentHop - 1].arrivalTime/100,  message->data[message->currentHop - 1].arrivalTime%100);
     strcat(response, temp);
     strcpy(neg_or_pos, response);
+    return response;
 }
 
 void send_udp(int port_number, char* message){
