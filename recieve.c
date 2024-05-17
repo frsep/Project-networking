@@ -155,6 +155,23 @@ void create_name_message(struct client_server *my_server, char *name_message){
     strcat(temp, temp2);
     strcpy(name_message, temp);
 }
+
+void parse_message(message* message, char* msg)
+{// Parse message into its component parts and store in message struct
+    char *line;
+    char key[MAX_WORDSIZE];
+    char msg_data[MAX_LINESIZE];
+    line = strtok(msg, "/n");
+    sscanf(line, "%s_%s", key, message->dataType);
+    line = strtok(NULL, "/n");
+    sscanf(line, "%s_%s", key, message->result);
+    line = strtok(NULL, "/n");
+    sscanf(line, "%s_%s", key, message->destination);
+    line = strtok(NULL, "/n");
+    sscanf(line, "%s_%s", key, msg_data);
+    parse_data(message, msg_data)
+}
+
 void parse_data(message_s* message, char* msg_data)
 {// Parse data into its component hops
     int hop = 0;
