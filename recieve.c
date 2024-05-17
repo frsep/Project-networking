@@ -7,6 +7,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <ctype.h>
+
 // Constants
 #define MAX_WORDSIZE                    256
 #define MAX_STATIONS                    100
@@ -310,7 +311,7 @@ void send_udp(int port_number, char* message){
     udp_addr.sin_addr.s_addr = INADDR_ANY;
     udp_addr.sin_port = htons(port_number);
     int len = strlen(message);
-    int result = sendto(udp_sock, message, len, 0, (struct sockaddr*) &udp_addr, sizeof(udp_addr));
+    sendto(udp_sock, message, len, 0, (struct sockaddr*) &udp_addr, sizeof(udp_addr));
     close(udp_sock);
 }
 
@@ -324,7 +325,7 @@ void delete_message(int index, struct client_server *my_server){
 void handle_response(char *msg, struct timetable *station, struct client_server *my_server)
 {
     messages *message;
-    if (strcmp(&message[5], "R") == 0){
+    if (strcmp(&msg[5], "R") == 0){
         parse_response(message, msg);
         if (DEBUG && message == NULL){
             printf("Failed to parse message/n");
