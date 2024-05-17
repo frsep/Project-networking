@@ -1,4 +1,5 @@
 import datetime
+import os
 import socket
 import sys
 import cgi
@@ -8,19 +9,27 @@ import select
 
 ACKNOWLEDGEMENTS = False
 
+"""
+Members:
+Malachy McGrath (23715959) <23715959@student.uwa.edu.au>
+Sepehr Amid (23342221) <23342221@student.uwa.edu.au>
+Joshua Ong (21713972) <21713972@student.uwa.edu.au>
+Fin O'Loughlin (23616047) <23616047@student.uwa.edu.au>
+"""
+
 
 def parse_message(msg: str):
     try:
         print(msg)
         result = {}
-        for line in msg.split('\n'):
+        for line in msg.split('\n'):    # Separates each line into key and value of dict
             parts = line.split('_', 1)
             key = parts[0].strip()
             value = parts[1].strip()
             result[key] = value
         msg_type = result["Type"]
-        data = result["Data"]
-        if (msg_type != "Name") and (msg_type != "ACK"):
+        data = str(result["Data"])
+        if (msg_type != "Name") and (msg_type != "ACK"):    # Contains trip data
             segments = []
             segment_data = data.split(';')
             for segment_str in segment_data:
@@ -39,15 +48,14 @@ def parse_message(msg: str):
                 })
                 result["Segments"] = segments
 
-        print(result)
         return result
     except Exception as e:
         print(f"Error parsing message: {e}")
         return None
 
 
-def best_response(response_array):
-    # given list of responses from servers, return only the best response from the array
+def best_response(response_array: typing.List[str]):
+    # Given a list of responses from servers, return only the best response from the array
     best_route = None
     best_time = "23:59"
     for message in response_array:
@@ -69,13 +77,12 @@ def send_udp_message(message, addrport):
 
 
 class Stations:
-    # def __init__(self, name, browser_port, query_port, *neighbour_query_ports):
     def __init__(self, name: str, browser_port: int, query_port: int, neighbours: typing.List[str]):
         self.browser_port = browser_port
         self.name = name
         self.query_port = query_port
-        self.neighbours = neighbours
-        self.neighbour_addresses = {}  # Dictionary with key = station name, value = address of server
+        self.neighbours = neighbours    # List of addresses and ports
+        self.neighbour_addresses = {}  # Dictionary that associates key = station name, value = (address, port) of server
 
         self.neighbour_queues = {}  # Dictionary with key = station address, value = [boolean ACK, queue of messages to be sent]
 
@@ -85,12 +92,15 @@ class Stations:
         self.client_connections = {}  # Dictionary with key = (destination, [stations up to (and including) this one]), value = socket
 
         self.timetable = {}
+        self.timetable_file = f"tt-{self.name}"
+
         self.load_timetable()
+        self.last_modification = None
 
     def load_timetable(self):
-        timetable_file = f"script/tt-{self.name}"  # Goes into the scripts folder
-        print(f"Opening file: {timetable_file}")
-        with open(timetable_file, 'r') as file:
+        print(f"Opening file: {self.timetable_file}")
+        self.last_modification = os.path.getmtime(self.timetable_file)
+        with open(self.timetable_file, 'r') as file:
             reader = csv.reader(file)
             for row in reader:
                 if not row or len(row) < 5 or row[0].startswith('#'):  # Skip empty lines and comments
@@ -107,7 +117,11 @@ class Stations:
                     self.timetable[arrival_station] = []
                 self.timetable[arrival_station].append((departure_time, route_name, arrival_time))
 
-    def best_route(self, destination, current_time):
+    def best_route(self, destination: str, current_time: str):
+        if self.last_modification != os.path.getmtime(self.timetable_file): # Checks if the timetable has been modified
+            self.timetable = {}  # Lets garbage collector take care of old dict
+            self.load_timetable()   # Repopulates with new data
+
         if destination not in self.timetable:
             return None
             # return f"No route found from {self.name} to {destination}"
@@ -116,19 +130,16 @@ class Stations:
                                 time >= current_time]
         if not available_departures:
             return None
-            # return f"No available departure times found from {self.name} to {destination}."
 
         available_departures.sort(key=lambda x: x[0])
 
         earliest_departure_time, route_name, arrival_time = available_departures[0]
         return f"{earliest_departure_time},{route_name},{self.name},{arrival_time},{destination}"
-        # return f"<h2>The best route from {self.name} to {destination} is to take {route_name} at {earliest_departure_time}<h2>"
 
-    def add_to_queue(self, message, addrport):
+    def add_to_queue(self, message: str, addrport: tuple):
         if ACKNOWLEDGEMENTS:
-            self.neighbour_queues.setdefault(addrport, [False, []])
-            print(f"Adding new message to queue: {message}")
-            self.neighbour_queues[addrport][1].append(message)
+            self.neighbour_queues.setdefault(addrport, [False, []])  # Sets up dict
+            self.neighbour_queues[addrport][1].append(message)  # Appends message to the end of a queue
         else:
             send_udp_message(message, addrport)
 
@@ -136,17 +147,17 @@ class Stations:
         for address, value in self.neighbour_queues.items():  # Iterates over each servers queue
             if value[0]:  # If ACK has been received
                 print(f"Removing: {value[1][0]}")
-                value[1].pop(0)  # Remove from the dict
-                value[0] = False
+                value[1].pop(0)  # Remove front of queue from the dict
+                value[0] = False    # Wait for next ACK
             else:  # No corresponding ACK received
-                if value[1]:
+                if value[1]:    # If there are messages enqueued
                     first_message = value[1][0]
-                    print(f"Resending: {first_message}")
                     send_udp_message(first_message, address)
 
     def send_acknowledgment(self, message: dict):
-        new_message = f"Type_ACK\nName_{self.name}\nData_" + str(message["Data"])
+        new_message = f"Type_ACK\nName_{self.name}\nData_" + str(message["Data"])  # Reconfigures msg as an ACK
         sender = None
+        # Determine who the ACK is for
         if message["Type"] == "Name":
             sender, recv_port = message["Data"].split(';')
         elif message["Type"] == "Query":
@@ -155,7 +166,7 @@ class Stations:
             for segment in message["Segments"]:
                 if segment["departing_from"] == self.name:
                     sender = segment["arrival_station"]
-        if sender:
+        if sender:  # Correct format, ACK recipient could be determined
             send_udp_message(new_message, self.neighbour_addresses[sender])
 
     def listen(self):
@@ -169,7 +180,6 @@ class Stations:
             sys.exit(1)
 
         try:
-
             # Create socket for UDP queries
             query_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             query_socket.bind(('127.0.0.1', int(self.query_port)))
@@ -181,8 +191,10 @@ class Stations:
         inputs = [tcp_socket, query_socket]
         outputs = []
 
+        # Wake up sequence, send out name for other servers
         for neighbour in self.neighbours:
             self.send_name(neighbour)
+
         while inputs:
             self.resend_pending_messages()
             readable, writable, exceptional = select.select(inputs, outputs, inputs, 1)
@@ -201,8 +213,7 @@ class Stations:
                                     if message["Data"] == parse_message(queue_item)["Data"]:
                                         value[0] = True  # Set ACK to received
                                         print("RECEIVED ACK")
-
-                    else:
+                    else:   # Not an ACK
                         if message["Type"] == "Name":
                             name, recv_port = message["Data"].split(';')
                             for neighbour in self.neighbours:
@@ -222,7 +233,7 @@ class Stations:
                         if ACKNOWLEDGEMENTS:
                             self.send_acknowledgment(message)
 
-            for key, response_array in list(self.responses.items()):
+            for key, response_array in list(self.responses.items()):    # Checks to see if any responses are ready to be sent
                 num_responses = len(response_array)
                 print(
                     f"key: {key}, response_array: {response_array}, num_responses: {num_responses}, num_neighbours: {len(self.neighbour_addresses)}")
@@ -235,7 +246,6 @@ class Stations:
                             http_response = f"HTTP/1.1 200 OK\r\nContent-Length: {len(response)}\r\n\r\n{response}"
                             self.client_connections[key].sendall(http_response.encode('utf-8'))
                         else:  # No route found
-                            print("No Route Found")
                             response_content = "No route found"
                             response = f"<h2>{response_content}<h2>"
                             http_response = f"HTTP/1.1 200 OK\r\nContent-Length: {len(response)}\r\n\r\n{response}"
@@ -250,19 +260,19 @@ class Stations:
                         if best_route:
                             self.forward_response(best_route)
                         else:
-                            self.create_response(response_array[0],
+                            self.create_response(response_array[0],     # Failed response
                                                  self.neighbour_addresses[self.servers_waiting[key]], False)
                         del self.servers_waiting[key]
                         del self.responses[key]
 
-    def send_name(self, neighbour):
+    def send_name(self, neighbour: str):
         try:
             addr, port = neighbour.split(':')
             self.add_to_queue(f"Type_Name\nData_{self.name};{self.query_port}", (addr, int(port)))
         except Exception as e:
             print(f"Failed to send name to {neighbour}: {e}")
 
-    def handle_tcp_request(self, tcp_socket):
+    def handle_tcp_request(self, tcp_socket: socket.socket):
         connection, address = tcp_socket.accept()
         print(f"Connection from {address} has been established!")
 
@@ -315,20 +325,19 @@ class Stations:
             # Send the response to the client
             connection.sendall(http_response.encode('utf-8'))
 
-    def create_query(self, final_destination, neighbour, current_time):
+    def create_query(self, final_destination: str, neighbour: str, current_time: str):
         try:
             return f"Type_Query\nDestination_{final_destination}\nData_{self.best_route(neighbour, current_time)}"
         except Exception as e:
             print(f"Error creating query: {e}")
 
-    def handle_query(self, message):
+    def handle_query(self, message: str):
         # Extract information from the query
         query = parse_message(message)
         if query is None:
             print("Failed to parse message")
             return
         destination = query["Destination"]
-        data = query["Data"]
         segments = query["Segments"]
 
         # Determine the sending station
@@ -349,7 +358,7 @@ class Stations:
             print("Forwarding")
             self.forward_query(message)
 
-    def forward_query(self, message):
+    def forward_query(self, message: str):
         query = parse_message(message)
         if query is None:
             print("Failed to parse message")
@@ -357,7 +366,7 @@ class Stations:
         try:
             exclude = [segment["departing_from"] for segment in query["Segments"]]  # Excludes stations visited already
             forwarded = False
-            # send to all neighbors
+            # Send to all neighbors
             for name, address in self.neighbour_addresses.items():
                 if name not in exclude:  # Skip over neighbours that have already seen this query
                     if self.best_route(name, query["Segments"][-1]["arrival_time"]):
@@ -376,7 +385,7 @@ class Stations:
         except Exception as e:
             print(f"Error forwarding query: {e}")
 
-    def create_response(self, message, address, result):
+    def create_response(self, message: str, address: tuple, result: bool):
         response = parse_message(message)
         if response is None:
             print("Failed to parse message")
@@ -396,7 +405,7 @@ class Stations:
         else:
             self.add_to_queue(f"Type_Response\nResult_Fail\nDestination_{destination}\nData_{str(data)}", address)
 
-    def handle_response(self, message):
+    def handle_response(self, message: str):
         response = parse_message(message)
         if response is None:
             print("Failed to parse message")
@@ -416,7 +425,8 @@ class Stations:
         except Exception as e:
             print(f"Failed to handle response: {e}")
 
-    def forward_response(self, message):
+    def forward_response(self, message: str):
+        # Sends response further back to the last hop
         response = parse_message(message)
         receiver = None
         for segment in response["Segments"]:

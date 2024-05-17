@@ -8,6 +8,14 @@
 #include <string.h>
 #include <ctype.h>
 
+/*
+Members:
+Malachy McGrath (23715959) <23715959@student.uwa.edu.au>
+Sepehr Amid (23342221) <23342221@student.uwa.edu.au>
+Joshua Ong (21713972) <21713972@student.uwa.edu.au>
+Fin O'Loughlin (23616047) <23616047@student.uwa.edu.au>
+*/
+
 // Constants
 #define MAX_WORDSIZE                    256
 #define MAX_STATIONS                    100
