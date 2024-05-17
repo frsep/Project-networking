@@ -1,3 +1,13 @@
+//  -----------------------------------------------------------------------------------------
+//  PROJECT HEADER
+//  CITS3002 Project 1 2024
+//  Student1:   23715959    Malachy McGrath
+//  Student2:   23616047    Fin     O'Loughlin
+//  Student3:   23342221    Sepehr  Amid
+//  Student4:   21713972    Josh    Ong
+
+//  -----------------------------------------------------------------------------------------
+//  HEADER FILES
 #include <sys/socket.h>
 #include <stdlib.h> 
 #include <stdio.h>
@@ -8,13 +18,6 @@
 #include <string.h>
 #include <ctype.h>
 
-/*
-Members:
-Malachy McGrath (23715959) <23715959@student.uwa.edu.au>
-Sepehr Amid (23342221) <23342221@student.uwa.edu.au>
-Joshua Ong (21713972) <21713972@student.uwa.edu.au>
-Fin O'Loughlin (23616047) <23616047@student.uwa.edu.au>
-*/
 
 // Constants
 #define MAX_WORDSIZE                    60
@@ -24,8 +27,8 @@ Fin O'Loughlin (23616047) <23616047@student.uwa.edu.au>
 #define MAX_LINESIZE                    1024 
 #define DEBUG                           1
 #define CHAR_COMMENT                    '#'
-// structs
 
+// Structs
 typedef struct{
     int port;
     char name[MAX_WORDSIZE];
