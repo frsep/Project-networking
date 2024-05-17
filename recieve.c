@@ -349,7 +349,7 @@ void handle_message(char *msg, struct timetable *station, struct client_server *
         if (find_route(&found, my_server->queries[my_server->messages_count].data[my_server->queries[my_server->messages_count].currentHop].arrivalTime, my_server->queries[my_server->messages_count].destination, station)){
             my_server->queries[my_server->messages_count].currentHop++;
             my_server->queries[my_server->messages_count].data[my_server->queries[my_server->messages_count].currentHop] = found;
-            char* pos_response;
+            char pos_response[MAX_LINESIZE];
 
             /////// create response ----> needs to send response struct to create response <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
             create_response(pos_response, "Result_Success", &message);
@@ -377,7 +377,7 @@ void handle_message(char *msg, struct timetable *station, struct client_server *
             }
             // send neg response back to source
             if (my_server->queries[my_server->messages_count].responses_needed == 0){
-                char* neg_response;
+                char neg_response[MAX_LINESIZE];
                 /////// create response ----> needs to send response struct to create response <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
                 create_response(neg_response, "Result_Fail", &message);
                 for(int i = 0; i < my_server->neighbour_count; i++){
@@ -436,7 +436,7 @@ void handle_response(response *message, char *msg, struct timetable *station, st
                     j--;
                 }
                 j--;
-                char* neg_response;
+                char neg_response[MAX_LINESIZE];
                 create_response(neg_response, "Result_Fail", message);
                 for(int x = 0; x < my_server->neighbour_count; x++){
                     if (strcmp(my_server->neighbour_list[x].name, message->data[j].departingFrom)){
@@ -454,7 +454,7 @@ void handle_response(response *message, char *msg, struct timetable *station, st
             j--;
             for(int x = 0; x < my_server->neighbour_count; x++){
                 if(strcmp(my_server->neighbour_list[x].name, best_response.data[j].arrivalStation)){
-                    char* res;
+                    char res[MAX_LINESIZE];
                     create_response(res,"Result_Success",&best_response);
                     send_udp(my_server->neighbour_list[x].port, res);
                     break;
@@ -479,7 +479,7 @@ void process_name_message(char* message, struct client_server *my_server, struct
         strcpy(my_server->neighbour_list[my_server->neighbours_added].name, name);
         my_server->neighbour_list[my_server->neighbours_added].added = true;
         my_server->neighbours_added++;
-        char* own_name;
+        char own_name[MAX_WORDSIZE];
         create_name_message(my_server, own_name);
         send_udp(atoi(token2), own_name);
         return;
@@ -508,7 +508,7 @@ void* udp_port(struct client_server *my_server, struct timetable *station){
     udp_addr.sin_port = htons(my_server->query_port);
     int bind_udpsock = bind(udp_sock,(struct sockaddr*) &udp_addr, sizeof(struct sockaddr_in));
     socklen_t addrlen = sizeof(udp_addr);
-    char rec_message[1000];
+    char rec_message[MAX_LINESIZE];
     while(1){
         int result = recvfrom(udp_sock, (char*)rec_message, sizeof(rec_message), 0, (struct sockaddr*) &other_serv_addr, &addrlen);
         //do something with received mesage
@@ -519,7 +519,7 @@ void* udp_port(struct client_server *my_server, struct timetable *station){
 
 void send_name_out(struct client_server *my_server){
 
-    char* temp;
+    char temp[MAX_WORDSIZE];
     create_name_message(my_server, temp);
     while(1){
         for(int i = 0; i < my_server->neighbour_count; i++){
