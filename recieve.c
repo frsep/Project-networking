@@ -465,7 +465,7 @@ void handle_response(response *message, char *msg, struct timetable *station, st
 }
 
 void process_name_message(char* message, struct client_server *my_server, struct timetable *station){
-    if(strcmp(message[5],"N")){ // Type is name
+    if(strcmp(&message[5],"N")){ // Type is name
         char* delim= ";";
         char* delim2= "\n";
         char* token;
@@ -506,7 +506,7 @@ void* udp_port(struct client_server *my_server, struct timetable *station){
     udp_addr.sin_family = AF_INET;
     udp_addr.sin_addr.s_addr = INADDR_ANY;
     udp_addr.sin_port = htons(my_server->query_port);
-    int bind_udpsock = bind(udp_sock,(struct sockaddr*) &udp_addr, sizeof(struct sockaddr_in));
+    bind_udpsock = bind(udp_sock,(struct sockaddr*) &udp_addr, sizeof(struct sockaddr_in));
     socklen_t addrlen = sizeof(udp_addr);
     char rec_message[MAX_LINESIZE];
     while(1){
