@@ -392,7 +392,7 @@ void handle_response(response *message, char *msg, struct timetable *station, st
             if(keepgoing){
                 continue;
             }
-            my_server->queries[my_server->messages_count].responses[my_server->queries[my_server->messages_count].current_response_count] = message;
+            my_server->queries[my_server->messages_count].responses[my_server->queries[my_server->messages_count].current_response_count] = *message;
             my_server->queries[my_server->messages_count].current_response_count++;
 
         }
@@ -402,10 +402,10 @@ void handle_response(response *message, char *msg, struct timetable *station, st
             int lowest_time = 1000000;
             int i;
             for(i = 0; i < message->current_response_count; i++){
-                if(message->responses[i].data[message->currentHop].arrivalTime < lowest_time){
-                    if(strcmp(message->responses[i].result,"Result_Success")){
-                        lowest_time = message->responses[i].data[message->currentHop].arrivalTime;
-                        best_response = message->responses[i];
+                if(my_server->queries[my_server->messages_count].responses[i].data[message->currentHop].arrivalTime < lowest_time){
+                    if(strcmp(my_server->queries[my_server->messages_count].responses[i].result,"Result_Success")){
+                        lowest_time = (&my_server->queries[my_server->messages_count])->responses[i].data[message->currentHop].arrivalTime;
+                        best_response = my_server->queries[my_server->messages_count].responses[i];
                     }
                 }
             }
