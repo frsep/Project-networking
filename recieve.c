@@ -56,6 +56,7 @@ struct client_server{
     int messages_count;
     struct neighbours *neighbour_list;
     message queries[MAX_STATIONS];
+    int messages_count;
     int neighbours_added;
 };
 // functions
@@ -214,7 +215,7 @@ char* create_responce(char* neg_or_pos, message* message){
         strcat(responce, ",");
         strcat(responce, message->data[i].arrivalStation);
         strcat(responce, ",");
-        strcat(responce, message->data[i].arrivalTime);
+        strcat(responce, atoi(message->data[i].arrivalTime));
         strcat(responce, ";");
     }
     strcat(responce, message->data[message->currentHop - 1].routeName);
@@ -223,8 +224,18 @@ char* create_responce(char* neg_or_pos, message* message){
     strcat(responce, ",");
     strcat(responce, message->data[message->currentHop - 1].arrivalStation);
     strcat(responce, ",");
-    strcat(responce, message->data[message->currentHop - 1].arrivalTime);
+    strcat(responce, atoi(message->data[message->currentHop - 1].arrivalTime));
     return responce;
+}
+void send_udp(int port_number, char* message){
+    struct sockaddr_in udp_addr;
+    int udp_sock = socket(AF_INET, SOCK_DGRAM, 0);
+    udp_addr.sin_family = AF_INET;
+    udp_addr.sin_addr.s_addr = INADDR_ANY;
+    udp_addr.sin_port = htons(port_number);
+    int len = strlen(message);
+    int result = sendto(udp_sock, message, len, 0, (struct sockaddr*) &udp_addr, sizeof(udp_addr));
+    close(udp_sock);
 }
 void handle_response(char *msg, struct timetable *station, struct client_server *my_server)
 {
@@ -234,6 +245,23 @@ void handle_response(char *msg, struct timetable *station, struct client_server 
         if (DEBUG && message == NULL){
             printf("Failed to parse message/n");
         }
+        for (int i = 0; i < my_server->messages_count; i++){
+            bool continew = false;
+            int j = 0;
+            while(!strcmp(my_server->name, message->data[message->currentHop].arrivalStation)){
+                if (!strcmp(my_server->queries[i]->data[j].arrivalStation, message.data[j].arrivalStation)) {
+                    continew = true;
+                    break;
+                }
+                j++;
+            }
+            if(continew){
+                continue;
+            }
+            my_server->queries[my_server->messages_count]->responces[my_server->queries[my_server->messages_count]->current_responce_count] = *message;
+            my_server->queries[my_server->messages_count]->current_responce_count++;
+
+        }
         ///add response to list of responses
         /// if all respnces have been received then send best one back to source
     }
@@ -242,19 +270,12 @@ void handle_response(char *msg, struct timetable *station, struct client_server 
         if (DEBUG && message == NULL){
             printf("Failed to parse message/n");
         }
+         // send positive response back to source if found in timetable
         route found;
         if (find_route(&found, message->data[message->currentHop].arrivalTime, message->destination, station)){
-            char responce[MAX_WORDSIZE];
-            strcat(responce, found.routeName);
-            strcat(responce, ",");
-            strcat(responce, found.departingFrom);
-            strcat(responce, ",");
-            strcat(responce, found.arrivalStation);
-            strcat(responce, ",");
-            strcat(responce, found.arrivalTime);
-            strcat(responce, ";");
-
-            // send positive response back to source
+            message->currentHop++;
+            message->data[message->currentHop] = found;
+            char* pos_responce = create_responce("Result_Success", message);
         }
         // send response to all neighbours that havnt been visited
         else{
@@ -269,11 +290,14 @@ void handle_response(char *msg, struct timetable *station, struct client_server 
                 if (find_route(&neighbour_route, message->data[message->currentHop].arrivalTime, my_server->neighbour_list[i].name, station)){
                     char* new_query = create_query(msg, &neighbour_route);
                     send_udp(my_server->neighbour_list[i].port, new_query);
+                    message->currentHop++;
                     message->responces_needed++;
                 }
                 else{
                     printf("neighbour not found/n");
                 }
+                my_server->queries[my_server->messages_count] = *message;
+                my_server->messages_count++;
             }
             // send neg response back to source
             if (message->responces_needed == 0){
@@ -290,16 +314,6 @@ void handle_response(char *msg, struct timetable *station, struct client_server 
         printf("Invalid message type/n");
     }
 };
-void send_udp(int port_number, char* message){
-    struct sockaddr_in udp_addr;
-    int udp_sock = socket(AF_INET, SOCK_DGRAM, 0);
-    udp_addr.sin_family = AF_INET;
-    udp_addr.sin_addr.s_addr = INADDR_ANY;
-    udp_addr.sin_port = htons(port_number);
-    int len = strlen(message);
-    int result = sendto(udp_sock, message, len, 0, (struct sockaddr*) &udp_addr, sizeof(udp_addr));
-    close(udp_sock);
-}
 void process_message(char* message, struct client_server *my_server, struct timetable *station){
     if(strcmp(&message[5],"N")){
         char* delim= ";";
@@ -512,6 +526,7 @@ int main(int argc, char const *argv[]){
     strcat(filename, argv[1]);
     read_timetable(filename, &station);
     struct client_server my_server;
+    my_server.messages_count = 0;
     my_server.neighbours_added = 0;
     my_server.messages_count = 0;
     bool message_out_flag = false;
