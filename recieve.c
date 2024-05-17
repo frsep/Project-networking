@@ -329,8 +329,20 @@ void delete_message(int index, struct client_server *my_server){
     }
     my_server->messages_count--;
 }
+void query_to_responce(messages *query, response *response){
+    response->currentHop = query->currentHop;
+    response->responses_needed = query->responses_needed;
+    response->current_response_count = query->current_response_count;
+    for(int i = 0; i < query->currentHop; i++){
+        response->data[i] = query->data[i];
+    }
+}
+
+
 void handle_message(char *msg, struct timetable *station, struct client_server *my_server){
     parse_query(&my_server->queries[my_server->messages_count], msg);
+    response message;
+    query_to_responce(&my_server->queries[my_server->messages_count], &message);
     my_server->messages_count++;
          // send positive response back to source if found in timetable
         route found;
@@ -338,8 +350,9 @@ void handle_message(char *msg, struct timetable *station, struct client_server *
             my_server->queries[my_server->messages_count].currentHop++;
             my_server->queries[my_server->messages_count].data[my_server->queries[my_server->messages_count].currentHop] = found;
             char* pos_response;
+
             /////// create response ----> needs to send response struct to create response <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-            create_response(pos_response, "Result_Success", message);
+            create_response(pos_response, "Result_Success", &message);
             /// send positive response back to source
         }
         // send querry to all neighbours that havnt been visited
@@ -366,7 +379,7 @@ void handle_message(char *msg, struct timetable *station, struct client_server *
             if (my_server->queries[my_server->messages_count].responses_needed == 0){
                 char* neg_response;
                 /////// create response ----> needs to send response struct to create response <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-                create_response(neg_response,"Result_Fail", message);
+                create_response(neg_response, "Result_Fail", &message);
                 for(int i = 0; i < my_server->neighbour_count; i++){
                     if (strcmp(my_server->neighbour_list[i].name, my_server->queries[my_server->messages_count].data[my_server->queries[my_server->messages_count].currentHop].departingFrom)){
                         send_udp(my_server->neighbour_list[i].port, neg_response);
