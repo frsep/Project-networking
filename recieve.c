@@ -42,14 +42,13 @@ typedef struct
 typedef struct
 {// Message struct to hold contents of a message
     char dataType[MAX_WORDSIZE];
-    char result[MAX_WORDSIZE];
     char destination[MAX_WORDSIZE];
     route data[MAX_HOPS];
     int currentHop;
     responce responces[MAX_HOPS];
     int current_responce_count;
     int responces_needed;
-} message;
+} message_s;
 struct timetable
 {// Timetable struct to hold station name, lat/lon, and array of all departure routes
     char stationName[MAX_WORDSIZE];
@@ -65,8 +64,8 @@ struct client_server{
     char name[MAX_WORDSIZE];
     int messages_count;
     struct neighbours *neighbour_list;
-    message queries[MAX_STATIONS];
-    message responses[MAX_STATIONS];
+    message_s queries[MAX_STATIONS];
+    responce responses[MAX_STATIONS];
     int responces_count;
     int neighbours_added;
 };
@@ -156,7 +155,7 @@ char* create_name_message(struct client_server *my_server){
     strcat(temp, temp2);
     return temp;
 }
-void parse_data(message* message, char* msg_data)
+void parse_data(message_s* message, char* msg_data)
 {// Parse data into its component hops
     int hop = 0;
     char msg_hop[MAX_LINESIZE];
@@ -177,7 +176,7 @@ void parse_data(message* message, char* msg_data)
     }
     message->currentHop = hop;
 };
-void parse_response(message* message, char* msg){
+void parse_response(responce* message, char* msg){
     // Parse message into its component parts and store in message struct
     char *line;
     char key[MAX_WORDSIZE];
@@ -192,7 +191,7 @@ void parse_response(message* message, char* msg){
     sscanf(line, "%s_%s", key, msg_data);
     parse_data(message, msg_data);
 };
-void parse_query(message* message, char* msg){
+void parse_query(message_s* message, char* msg){
     // Parse message into its component parts and store in message struct
     char *line;
     char key[MAX_WORDSIZE];
@@ -213,7 +212,7 @@ char* create_query(char* message, route* route)
     sprintf(temp, "%s;%d,%s,%s,%d,%s", message, route->departureTime, route->routeName, route->departingFrom, route->arrivalTime, route->arrivalStation);
     return temp;
 };
-char* create_responce(char* neg_or_pos, message* message){
+char* create_responce(char* neg_or_pos, responce* message){
     char responce[MAX_WORDSIZE];
     strcpy(responce, "Type_Response\n");
     strcat(responce, "\n");
@@ -260,7 +259,7 @@ void delete_message(int index, struct client_server *my_server){
 }
 void handle_response(char *msg, struct timetable *station, struct client_server *my_server)
 {
-    message *message;
+    message_s *message;
     if (strcmp(&message[5], "R") == 0){
         parse_response(message, msg);
         if (DEBUG && message == NULL){
@@ -285,13 +284,13 @@ void handle_response(char *msg, struct timetable *station, struct client_server 
             if(continew){
                 continue;
             }
-            my_server->queries[my_server->messages_count]->responces[my_server->queries[my_server->messages_count]->current_responce_count] = message;
-            my_server->queries[my_server->messages_count]->current_responce_count++;
+            my_server->queries[my_server.messages_count]->responces[my_server->queries[my_server.messages_count]->current_responce_count] = message;
+            my_server->queries[my_server.messages_count]->current_responce_count++;
 
         }
         /// if all respnces have been received then send best one back to source
         if (message->current_responce_count == message->responces_needed){
-            message best_responce;
+            responce best_responce;
             int lowest_time = 1000000;
             int i;
             for(i = 0; i < message->current_responce_count; i++){
@@ -318,14 +317,14 @@ void handle_response(char *msg, struct timetable *station, struct client_server 
                 return;
             }
             ///send it to next position if successfull repsonce was found
-            int j = best_responce->currentHop;
-            while(!strcmp(best_responce->data[j].arrivalStation, my_server->name)){
+            int j = best_responce.currentHop;
+            while(!strcmp(best_responce.data[j].arrivalStation, my_server->name)){
                 j--;
             }
             j--;
             for(int x = 0; x < my_server->neighbour_count; x++){
-                if(strcmp(my_server->neighbour_list[x].name, best_responce->data[j].arrivalStation)){
-                    send_udp(my_server->neighbour_list[x].port, create_responce("Result_Success", best_responce));
+                if(strcmp(my_server->neighbour_list[x].name, best_responce.data[j].arrivalStation)){
+                    send_udp(my_server->neighbour_list[x].port, create_responce("Result_Success", &best_responce));
                     break;
                 }
             }
@@ -596,7 +595,7 @@ void server_listen(struct client_server *my_server, struct timetable *station){
             }
         }
         // send best responce back to client
-        message* best_responce;
+        responce* best_responce;
         int lowest_time = 1000000;
         for(int i = 0; i < my_server->responces_count; i++){
             if(my_server->responses[i].data[my_server->responses[i].currentHop].arrivalTime < lowest_time){
