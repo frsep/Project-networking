@@ -392,8 +392,8 @@ void handle_response(response *message, char *msg, struct timetable *station, st
             if(keepgoing){
                 continue;
             }
-            my_server->queries[my_server->messages_count]->responses[my_server->queries[my_server->messages_count]->current_response_count] = message;
-            my_server->queries[my_server->messages_count]->current_response_count++;
+            my_server->queries[my_server->messages_count].responses[my_server->queries[my_server->messages_count].current_response_count] = message;
+            my_server->queries[my_server->messages_count].current_response_count++;
 
         }
         /// if all respnces have been received then send best one back to source
