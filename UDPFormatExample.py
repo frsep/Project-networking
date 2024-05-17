@@ -50,11 +50,12 @@ Data_10:00,Route 1,Station3,10:15,Route 1,Warwick-Stn;10:15,Route 1,Warwick-Stn,
 -------------------Acknowledgements----------------
 My idea is to keep all messages for a specific server in a queue. Each iteration of the main loop, if you have not
 received an "ACK" from the server, send it again.
-As soon as a server receives any message that is not an ACK, it sends back "ACK" in response
-When a server receives an ACK, it knows to pop the first message out of the queue and start sending the next one in line
+As soon as a server receives any message that is not an ACK, it sends back Type_ACK with Name_StationName and Data_dataFromOriginalMsg
+When a server receives an ACK that matches the server and data, it knows to pop the first message out of the queue and start sending the next one in line
 until the ack is received
 
-literally I think just "ACK" is enough
+Example ACK for a name message: Type_ACK\nName_JunctionC\nData_StationE;4010
+Example ACK for a query or response: Type_ACK\nName_StationE\nData_07:49,busD_E,BusportD,08:08,StationE;08:29,busE_A,StationE,08:44,StationA
 '''
 
 # Example data
