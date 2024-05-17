@@ -568,10 +568,10 @@ void server_listen(struct client_server *my_server, struct timetable *station){
         route neighbour_route;
         if (find_route(&neighbour_route, 0, destination, station)){
             char* response = "HTTP/1.1 200 OK\nContent-Type: text/html\n\n<html><body><h1>";
-            strcat(response, neighbour_route.departureTime);
+            sprintf(response, "%s:%d", response, neighbour_route.departureTime);
             strcat(response, neighbour_route.routeName);
             strcat(response, neighbour_route.departingFrom);
-            strcat(response, neighbour_route.arrivalTime);
+            sprintf(response, "%s:%d", response, neighbour_route.arrivalTime);
             strcat(response, neighbour_route.arrivalStation);
             strcat(response, "</h1></body></html>");
             send(accept_sock, response, sizeof(response), 0);
