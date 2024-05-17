@@ -58,7 +58,6 @@ struct client_server{
     message queries[MAX_STATIONS];
     message responses[MAX_STATIONS];
     int responces_count;
-    int messages_count;
     int neighbours_added;
 };
 // functions
@@ -267,7 +266,7 @@ void handle_response(char *msg, struct timetable *station, struct client_server 
             bool continew = false;
             int j = 0;
             while(!strcmp(my_server->name, message->data[message->currentHop].arrivalStation)){
-                if (!strcmp(my_server->queries[i]->data[j].arrivalStation, message.data[j].arrivalStation)) {
+                if (!strcmp(my_server->queries[i]->data[j]->arrivalStation, message->data[j].arrivalStation)) {
                     continew = true;
                     break;
                 }
@@ -282,7 +281,7 @@ void handle_response(char *msg, struct timetable *station, struct client_server 
         }
         /// if all respnces have been received then send best one back to source
         if (message->current_responce_count == message->responces_needed){
-            message* best_responce;
+            message best_responce;
             int lowest_time = 1000000;
             int i;
             for(i = 0; i < message->current_responce_count; i++){
@@ -591,9 +590,9 @@ void server_listen(struct client_server *my_server, struct timetable *station){
         int lowest_time = 1000000;
         for(int i = 0; i < my_server->responces_count; i++){
             if(my_server->responses[i].data[my_server->responses[i].currentHop].arrivalTime < lowest_time){
-                if(strcmp(my_server->responces[i]->result,"Result_Success")){
-                        lowest_time = my_server->responces[i].data[my_server->currentHop].arrivalTime;
-                        best_responce = my_server->responces[i];
+                if(strcmp(my_server->responses[i]->result,"Result_Success")){
+                        lowest_time = my_server->responses[i].data[my_server->responses[i].currentHop].arrivalTime;
+                        best_responce = my_server->responses[i];
                     }
             }
         }
@@ -651,6 +650,6 @@ int main(int argc, char const *argv[]){
     my_server.query_port = atoi(argv[3]);
     my_server.browser_port = atoi(argv[2]);
     strcpy(my_server.name, argv[1]);
-    server_listen(&my_server);
+    server_listen(&my_server, &station);
     return 0;
 }
