@@ -331,7 +331,7 @@ void handle_message(messages *message, char *msg, struct timetable *station, str
         if (find_route(&found, message->data[message->currentHop].arrivalTime, message->destination, station)){
             message->currentHop++;
             message->data[message->currentHop] = found;
-            char* pos_response [MAX_LINESIZE];
+            char* pos_response;
             create_response(pos_response, "Result_Success", message);
         }
         // send response to all neighbours that havnt been visited
@@ -358,7 +358,8 @@ void handle_message(messages *message, char *msg, struct timetable *station, str
             }
             // send neg response back to source
             if (message->responses_needed == 0){
-                char* neg_response = create_response("Result_Fail", message);
+                char* neg_response;
+                create_response(neg_response,"Result_Fail", message);
                 for(int i = 0; i < my_server->neighbour_count; i++){
                     if (strcmp(my_server->neighbour_list[i].name, message->data[message->currentHop].departingFrom)){
                         send_udp(my_server->neighbour_list[i].port, neg_response);
