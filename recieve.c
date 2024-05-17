@@ -72,7 +72,7 @@ struct client_server
     int neighbour_count;
     char name[MAX_WORDSIZE];
     int messages_count;
-    neighbours *neighbour_list;
+    neighbours neighbour_list[MAX_STATIONS];
     messages queries[MAX_STATIONS];
     response* responses[MAX_STATIONS];
     int responses_count;
@@ -613,13 +613,8 @@ int main(int argc, char const *argv[]){
     my_server.responses_count = 0;
     my_server.messages_count = 0;
     my_server.neighbours_added = 0;
-    bool message_out_flag = false;
     int num_neighbours = argc-4;
     my_server.neighbour_count = num_neighbours;
-
-    /**/
-    my_server.neighbour_list = (struct neighbours*)malloc(num_neighbours*sizeof(neighbours));
-
     char temp[MAX_WORDSIZE];
     for(int i = 0; i < num_neighbours; i++){
         strcpy((char*)temp, (char*)argv[4+i]);
@@ -630,8 +625,6 @@ int main(int argc, char const *argv[]){
         my_server.neighbour_list[i].port = atoi(ip_str);
         my_server.neighbour_list[i].added = false;
     }
-
-
 
     my_server.query_port = atoi(argv[3]);
     my_server.browser_port = atoi(argv[2]);
