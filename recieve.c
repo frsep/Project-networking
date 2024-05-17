@@ -262,11 +262,11 @@ void parse_query(messages* message, char* msg){
     message->current_response_count = 0;
 }
 
-void create_query(char* message, route* route)
+void create_query(char* query, route* route)
 {// Create a query message to send to other servers
     char temp[MAX_LINESIZE];
-    sprintf(temp, "%s;%d,%s,%s,%d,%s", message, route->departureTime, route->routeName, route->departingFrom, route->arrivalTime, route->arrivalStation);
-    strcpy (message, temp);
+    sprintf(temp, "%s;%d,%s,%s,%d,%s", query, route->departureTime, route->routeName, route->departingFrom, route->arrivalTime, route->arrivalStation);
+    strcpy (query, temp);
 }
 
 void create_response(char* neg_or_pos, response* message){
@@ -330,7 +330,7 @@ void handle_response(response *message, char *msg, struct timetable *station, st
             printf("Failed to parse message/n");
         }
         ///add response to list of responses
-        if(strcmp(message->data[0].departingFrom,my_server->name) == 0){
+        if(strcmp(message->data[0].departingFrom, my_server->name) == 0){
             my_server->responses[my_server->messages_count] = message;
             my_server->responses_count++;
             return;
@@ -395,51 +395,51 @@ void handle_response(response *message, char *msg, struct timetable *station, st
             delete_message(i, my_server);
         }
     }
-    else if (strcmp(&message[5], "Q") == 0){
-        parse_query(message, msg);
-        if (DEBUG && message == NULL){
-            printf("Failed to parse message/n");
-        }
-         // send positive response back to source if found in timetable
-        route found;
-        if (find_route(&found, message->data[message->currentHop].arrivalTime, message->destination, station)){
-            message->currentHop++;
-            message->data[message->currentHop] = found;
-            char* pos_response = create_response("Result_Success", message);
-        }
-        // send response to all neighbours that havnt been visited
-        else{
-            for(int i = 0; i < my_server->neighbour_count; i++){
-                route neighbour_route;
-                for(int j = 0; j < message->currentHop; j++){
-                    if(strcmp(my_server->neighbour_list[i].name, message->data[j].arrivalStation)){
-                        break;
-                    }
-                }
-                // send query to this neighbour
-                if (find_route(&neighbour_route, message->data[message->currentHop].arrivalTime, my_server->neighbour_list[i].name, station)){
-                    char* new_query = create_query(msg, &neighbour_route);
-                    send_udp(my_server->neighbour_list[i].port, new_query);
-                    message->currentHop++;
-                    message->responses_needed++;
-                }
-                else{
-                    printf("neighbour not found/n");
-                }
-                my_server->queries[my_server->messages_count] = *message;
-                my_server->messages_count++;
-            }
-            // send neg response back to source
-            if (message->responses_needed == 0){
-                char* neg_response = create_response("Result_Fail", message);
-                for(int i = 0; i < my_server->neighbour_count; i++){
-                    if (strcmp(my_server->neighbour_list[i].name, message->data[message->currentHop].departingFrom)){
-                        send_udp(my_server->neighbour_list[i].port, neg_response);
-                    }
-                }
-            }
-        }
-    }
+    // else if (strcmp(&message[5], "Q") == 0){
+    //     parse_query(message, msg);
+    //     if (DEBUG && message == NULL){
+    //         printf("Failed to parse message/n");
+    //     }
+    //      // send positive response back to source if found in timetable
+    //     route found;
+    //     if (find_route(&found, message->data[message->currentHop].arrivalTime, message->destination, station)){
+    //         message->currentHop++;
+    //         message->data[message->currentHop] = found;
+    //         char* pos_response = create_response("Result_Success", message);
+    //     }
+    //     // send response to all neighbours that havnt been visited
+    //     else{
+    //         for(int i = 0; i < my_server->neighbour_count; i++){
+    //             route neighbour_route;
+    //             for(int j = 0; j < message->currentHop; j++){
+    //                 if(strcmp(my_server->neighbour_list[i].name, message->data[j].arrivalStation)){
+    //                     break;
+    //                 }
+    //             }
+    //             // send query to this neighbour
+    //             if (find_route(&neighbour_route, message->data[message->currentHop].arrivalTime, my_server->neighbour_list[i].name, station)){
+    //                 char* new_query = create_query(msg, &neighbour_route);
+    //                 send_udp(my_server->neighbour_list[i].port, new_query);
+    //                 message->currentHop++;
+    //                 message->responses_needed++;
+    //             }
+    //             else{
+    //                 printf("neighbour not found/n");
+    //             }
+    //             my_server->queries[my_server->messages_count] = *message;
+    //             my_server->messages_count++;
+    //         }
+    //         // send neg response back to source
+    //         if (message->responses_needed == 0){
+    //             char* neg_response = create_response("Result_Fail", message);
+    //             for(int i = 0; i < my_server->neighbour_count; i++){
+    //                 if (strcmp(my_server->neighbour_list[i].name, message->data[message->currentHop].departingFrom)){
+    //                     send_udp(my_server->neighbour_list[i].port, neg_response);
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
     else{
         printf("Invalid message type/n");
     }
@@ -511,7 +511,6 @@ void server_listen(struct client_server *my_server, struct timetable *station){
     pthread_t udp_listen;
     pthread_create(&udp_listen, NULL, (void*)udp_port, my_server);
     
-
     char client_req[1000];
     int sock = socket(AF_INET, SOCK_STREAM, 0);
     struct sockaddr_in _addr;
@@ -522,10 +521,7 @@ void server_listen(struct client_server *my_server, struct timetable *station){
     int listen_sock = listen(sock, 1);
     socklen_t addrlen = sizeof(_addr);
 
-
     while(1){
-
-
         int accept_sock = accept(sock, (struct sockaddr*) &_addr, &addrlen);
         read(accept_sock, client_req, sizeof(client_req));
         char* delim= "=";
@@ -556,11 +552,11 @@ void server_listen(struct client_server *my_server, struct timetable *station){
         }
         // send query to all neighbours
         for (int i = 0; i < my_server->neighbour_count; i++){
-            route neighbour_route;
             if (find_route(&neighbour_route, 0, my_server->neighbour_list[i].name, station)){
-                char* message = "Type_Query\n";
-                strcat(message, destination);
-                char* query = create_query(message, &neighbour_route);
+                char* query = "Type_Query\n";
+                strcat(query, destination);
+                strcat(query, "\n");
+                create_query(&query, &neighbour_route);
                 send_udp(my_server->neighbour_list[i].port, query);
                 my_server->messages_count++;
             }
@@ -610,7 +606,6 @@ int main(int argc, char const *argv[]){
     my_server.responses_count = 0;
     my_server.messages_count = 0;
     my_server.neighbours_added = 0;
-    my_server.messages_count = 0;
     bool message_out_flag = false;
     int num_neighbours = argc-4;
     my_server.neighbour_count = num_neighbours;
