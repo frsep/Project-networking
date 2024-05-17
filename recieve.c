@@ -156,7 +156,7 @@ void create_name_message(struct client_server *my_server, char *name_message){
     strcpy(name_message, temp);
 }
 
-void parse_message(message* message, char* msg)
+void parse_message(message_s* message, char* msg)
 {// Parse message into its component parts and store in message struct
     char *line;
     char key[MAX_WORDSIZE];
