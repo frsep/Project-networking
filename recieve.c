@@ -322,31 +322,30 @@ void delete_message(int index, struct client_server *my_server){
     my_server->messages_count--;
 }
 
-void handle_response(char *msg, struct timetable *station, struct client_server *my_server)
+void handle_response(response *message, char *msg, struct timetable *station, struct client_server *my_server)
 {
-    messages *message;
-    if (strcmp(&msg[5], "R") == 0){
+    if (strcmp(&msg[5], "R") == 0){ // Type is Response
         parse_response(message, msg);
         if (DEBUG && message == NULL){
             printf("Failed to parse message/n");
         }
         ///add response to list of responses
         if(strcmp(message->data[0].departingFrom,my_server->name) == 0){
-            my_server->responses[my_server->messages_count] = *message;
+            my_server->responses[my_server->messages_count] = message;
             my_server->responses_count++;
             return;
         }
         for (int i = 0; i < my_server->messages_count; i++){
-            bool continew = false;
+            bool keepgoing = false;
             int j = 0;
             while(!strcmp(my_server->name, message->data[message->currentHop].arrivalStation)){
                 if (!strcmp(my_server->queries[i]->data[j]->arrivalStation, message->data[j].arrivalStation)) {
-                    continew = true;
+                    keepgoing = true;
                     break;
                 }
                 j++;
             }
-            if(continew){
+            if(keepgoing){
                 continue;
             }
             my_server->queries[my_server->messages_count]->responses[my_server->queries[my_server->messages_count]->current_response_count] = message;
@@ -447,7 +446,7 @@ void handle_response(char *msg, struct timetable *station, struct client_server 
 }
 
 void process_name_message(char* message, struct client_server *my_server, struct timetable *station){
-    if(strcmp(&message[5],"N")){
+    if(strcmp(message[5],"N")){ // Type is name
         char* delim= ";";
         char* delim2= "\n";
         char* token;
