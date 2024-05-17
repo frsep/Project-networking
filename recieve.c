@@ -345,8 +345,8 @@ void handle_message(messages *message, char *msg, struct timetable *station, str
                 }
                 // send query to this neighbour
                 if (find_route(&neighbour_route, message->data[message->currentHop].arrivalTime, my_server->neighbour_list[i].name, station)){
-                    char* new_query = create_query(msg, &neighbour_route);
-                    send_udp(my_server->neighbour_list[i].port, new_query);
+                    create_query(msg, &neighbour_route);
+                    send_udp(my_server->neighbour_list[i].port, msg);
                     message->currentHop++;
                     message->responses_needed++;
                 }
