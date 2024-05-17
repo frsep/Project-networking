@@ -56,6 +56,8 @@ struct client_server{
     int messages_count;
     struct neighbours *neighbour_list;
     message queries[MAX_STATIONS];
+    message responses[MAX_STATIONS];
+    int responces_count;
     int messages_count;
     int neighbours_added;
 };
@@ -209,6 +211,8 @@ char* create_responce(char* neg_or_pos, message* message){
     strcat(responce, neg_or_pos);
     strcat(responce, "\n");
     for(int i = 0; i < message->currentHop - 1; i++){
+        strcat(responce, atoi(message->data[i].departureTime));
+        strcat(responce, ",");
         strcat(responce, message->data[i].routeName);
         strcat(responce, ",");
         strcat(responce, message->data[i].departingFrom);
@@ -218,6 +222,8 @@ char* create_responce(char* neg_or_pos, message* message){
         strcat(responce, atoi(message->data[i].arrivalTime));
         strcat(responce, ";");
     }
+    strcat(responce, atoi(message->data[message->currentHop - 1].departureTime));
+    strcat(responce, ",");
     strcat(responce, message->data[message->currentHop - 1].routeName);
     strcat(responce, ",");
     strcat(responce, message->data[message->currentHop - 1].departingFrom);
@@ -237,6 +243,12 @@ void send_udp(int port_number, char* message){
     int result = sendto(udp_sock, message, len, 0, (struct sockaddr*) &udp_addr, sizeof(udp_addr));
     close(udp_sock);
 }
+void delete_message(int index, struct client_server *my_server){
+    for(int i = index; i < my_server->messages_count; i++){
+        my_server->queries[i] = my_server->queries[i+1];
+    }
+    my_server->messages_count--;
+}
 void handle_response(char *msg, struct timetable *station, struct client_server *my_server)
 {
     message *message;
@@ -244,6 +256,12 @@ void handle_response(char *msg, struct timetable *station, struct client_server 
         parse_response(message, msg);
         if (DEBUG && message == NULL){
             printf("Failed to parse message/n");
+        }
+        ///add response to list of responses
+        if(strcmp(message->data[0].departingFrom,my_server->name) == 0){
+            my_server->responses[my_server->messages_count] = *message;
+            my_server->responces_count++;
+            return;
         }
         for (int i = 0; i < my_server->messages_count; i++){
             bool continew = false;
@@ -262,8 +280,48 @@ void handle_response(char *msg, struct timetable *station, struct client_server 
             my_server->queries[my_server->messages_count]->current_responce_count++;
 
         }
-        ///add response to list of responses
         /// if all respnces have been received then send best one back to source
+        if (message->current_responce_count == message->responces_needed){
+            message* best_responce;
+            int lowest_time = 1000000;
+            int i;
+            for(i = 0; i < message->current_responce_count; i++){
+                if(message->responces[i].data[message->currentHop].arrivalTime < lowest_time){
+                    if(strcmp(message->responces[i]->result,"Result_Success")){
+                        lowest_time = message->responces[i].data[message->currentHop].arrivalTime;
+                        best_responce = message->responces[i];
+                    }
+                }
+            }
+            if (lowest_time == 1000000){
+                int j = message->currentHop;
+                while(!strcmp(message->data[j].arrivalStation, my_server->name)){
+                    j--;
+                }
+                j--;
+                char* neg_responce = create_responce("Result_Fail", message);
+                for(int x = 0; x < my_server->neighbour_count; x++){
+                    if (strcmp(my_server->neighbour_list[x].name, message->data[j].departingFrom)){
+                        send_udp(my_server->neighbour_list[x].port, neg_responce);
+                    }
+                }
+                delete_message(i, my_server);
+                return;
+            }
+            ///send it to next position if successfull repsonce was found
+            int j = best_responce->currentHop;
+            while(!strcmp(best_responce->data[j].arrivalStation, my_server->name)){
+                j--;
+            }
+            j--;
+            for(int x = 0; x < my_server->neighbour_count; x++){
+                if(strcmp(my_server->neighbour_list[x].name, best_responce->data[j].arrivalStation)){
+                    send_udp(my_server->neighbour_list[x].port, create_responce("Result_Success", best_responce));
+                    break;
+                }
+            }
+            delete_message(i, my_server);
+        }
     }
     else if (strcmp(&message[5], "Q") == 0){
         parse_query(message, msg);
@@ -373,7 +431,7 @@ void send_name_out(struct client_server *my_server){
     }
     return;
 }
-void server_listen(struct client_server *my_server){
+void server_listen(struct client_server *my_server, struct timetable *station){
     send_name_out(my_server);
     /*
     struct sockaddr_in udp_addr, other_serv_addr;
@@ -497,26 +555,66 @@ void server_listen(struct client_server *my_server){
             }
             destination[i] = token[i];
         }
-
-        //// replace this with the right message that needs to be sent out initially <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-        char temp[MAX_WORDSIZE];
-        sprintf(temp, "%d", my_server->query_port);
-        for(int i = 0; i < my_server->neighbour_count; i++){
-            send_udp(my_server->neighbour_list[i].port, temp);
+        // search for destination in timetable
+        route neighbour_route;
+        if (find_route(&neighbour_route, 0, destination, station)){
+            char* responce = "HTTP/1.1 200 OK\nContent-Type: text/html\n\n<html><body><h1>";
+            strcat(responce, neighbour_route.departureTime);
+            strcat(responce, neighbour_route.routeName);
+            strcat(responce, neighbour_route.departingFrom);
+            strcat(responce, neighbour_route.arrivalTime);
+            strcat(responce, neighbour_route.arrivalStation);
+            strcat(responce, "</h1></body></html>");
+            send(accept_sock, responce, sizeof(responce), 0);
+            close(accept_sock);
+            continue;
         }
+        // send query to all neighbours
+        for (int i = 0; i < my_server->neighbour_count; i++){
+            route neighbour_route;
+            if (find_route(&neighbour_route, 0, my_server->neighbour_list[i].name, station)){
+                char* message = "Type_Query\n";
+                strcat(message, destination);
+                char* query = create_query(message, &neighbour_route);
+                send_udp(my_server->neighbour_list[i].port, query);
+                my_server->messages_count++;
+            }
+        }
+        
         while(1){
-            if(my_server->messages_count == my_server->neighbour_count){
+            if(my_server->responces_count == my_server->neighbour_count){
                 break;
             }
         }
-
-
-
-        char respnce[10000] = "HTTP/1.1 200 OK\nContent-Type: text/html\n\n<html><body><h1>HELLO WRLD!";
-        strcat(respnce, "</h1></body></html>");
-        send(accept_sock, respnce, sizeof(respnce), 0);
+        // send best responce back to client
+        message* best_responce;
+        int lowest_time = 1000000;
+        for(int i = 0; i < my_server->responces_count; i++){
+            if(my_server->responses[i].data[my_server->responses[i].currentHop].arrivalTime < lowest_time){
+                if(strcmp(my_server->responces[i]->result,"Result_Success")){
+                        lowest_time = my_server->responces[i].data[my_server->currentHop].arrivalTime;
+                        best_responce = my_server->responces[i];
+                    }
+            }
+        }
+        if (lowest_time == 1000000){
+            send(accept_sock, "HTTP/1.1 200 OK\nContent-Type: text/html\n\n<html><body><h1>NO ROUTE FOUND</h1></body></html>", sizeof("HTTP/1.1 200 OK\nContent-Type: text/html\n\n<html><body><h1>NO ROUTE FOUND</h1></body></html>"), 0);
+            close(accept_sock);
+            continue;
+        }
+        char* responce = "HTTP/1.1 200 OK\nContent-Type: text/html\n\n<html><body><h1>";
+        for(int i = 0; i < best_responce->currentHop; i++){
+            strcat(responce, best_responce->data[i].departureTime);
+            strcat(responce, best_responce->data[i].routeName);
+            strcat(responce, best_responce->data[i].departingFrom);
+            strcat(responce, best_responce->data[i].arrivalTime);
+            strcat(responce, best_responce->data[i].arrivalStation);
+        }
+        strcat(responce, "</h1></body></html>");
+        send(accept_sock, responce, sizeof(responce), 0);
         close(accept_sock);
     }
+
 
     
 }
@@ -526,6 +624,7 @@ int main(int argc, char const *argv[]){
     strcat(filename, argv[1]);
     read_timetable(filename, &station);
     struct client_server my_server;
+    my_server.responces_count = 0;
     my_server.messages_count = 0;
     my_server.neighbours_added = 0;
     my_server.messages_count = 0;
