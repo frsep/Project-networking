@@ -452,7 +452,7 @@ void process_name_message(char* message, struct client_server *my_server, struct
         char* name;
         token = strtok(message, delim);
         token2 = strtok(NULL, delim);
-        strcpy(my_server->neighbour_list[my_server->neighbours_added].port, atoi(token2));
+        my_server->neighbour_list[my_server->neighbours_added].port = atoi(token2);
         strtok(token, delim2);
         name = strtok(NULL, delim2);
         strcpy(my_server->neighbour_list[my_server->neighbours_added].name, name);
