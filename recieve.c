@@ -524,8 +524,8 @@ void server_listen(struct client_server *my_server, struct timetable *station){
     _addr.sin_family = AF_INET;
     _addr.sin_addr.s_addr = INADDR_ANY;
     _addr.sin_port = htons(my_server->browser_port);
-    int bind_sock = bind(sock,(struct sockaddr*) &_addr, sizeof(struct sockaddr_in));
-    int listen_sock = listen(sock, 1);
+    bind(sock,(struct sockaddr*) &_addr, sizeof(struct sockaddr_in)); // returns int if req for errors
+    listen(sock, 1); // returns int if req for errors
     socklen_t addrlen = sizeof(_addr);
 
     while(1){
