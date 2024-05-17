@@ -330,6 +330,7 @@ void handle_message(char *msg, struct timetable *station, struct client_server *
             my_server->queries[my_server->messages_count].currentHop++;
             my_server->queries[my_server->messages_count].data[my_server->queries[my_server->messages_count].currentHop] = found;
             char* pos_response;
+            /////// create response ----> needs to send response struct to create response <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
             create_response(pos_response, "Result_Success", message);
             /// send positive response back to source
         }
@@ -356,6 +357,7 @@ void handle_message(char *msg, struct timetable *station, struct client_server *
             // send neg response back to source
             if (my_server->queries[my_server->messages_count].responses_needed == 0){
                 char* neg_response;
+                /////// create response ----> needs to send response struct to create response <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
                 create_response(neg_response,"Result_Fail", message);
                 for(int i = 0; i < my_server->neighbour_count; i++){
                     if (strcmp(my_server->neighbour_list[i].name, my_server->queries[my_server->messages_count].data[my_server->queries[my_server->messages_count].currentHop].departingFrom)){
