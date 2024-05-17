@@ -284,7 +284,7 @@ char* create_response(char* neg_or_pos, response* message){
         strcat(response, ",");
         strcat(response, message->data[i].arrivalStation);
         strcat(response, ",");
-        sprintf(temp, "%d:%d", message->data[i].arrivalTime/100, message->data[i].arrivalTime%100, );
+        sprintf(temp, "%d:%d", message->data[i].arrivalTime/100, message->data[i].arrivalTime%100);
         strcat(response, temp);
         strcat(response, ";");
     }
