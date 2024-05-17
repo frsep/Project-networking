@@ -614,7 +614,6 @@ void server_listen(struct client_server *my_server, struct timetable *station){
         char* response = "HTTP/1.1 200 OK\nContent-Type: text/html\n\n<html><body><h1>";
         for(int i = 0; i < best_response->currentHop; i++){
             char temp[MAX_WORDSIZE];
-            temp 
             strcat(response, best_response->data[i].departureTime);
             strcat(response, best_response->data[i].routeName);
             strcat(response, best_response->data[i].departingFrom);
