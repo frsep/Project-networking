@@ -17,11 +17,11 @@ Fin O'Loughlin (23616047) <23616047@student.uwa.edu.au>
 */
 
 // Constants
-#define MAX_WORDSIZE                    256
+#define MAX_WORDSIZE                    60
 #define MAX_STATIONS                    100
 #define MAX_DEPARTURES                  100
 #define MAX_HOPS                        100
-#define MAX_LINESIZE                    256 
+#define MAX_LINESIZE                    1024 
 #define DEBUG                           1
 #define CHAR_COMMENT                    '#'
 // structs
@@ -142,7 +142,7 @@ void read_timetable(char filename[], struct timetable *station)
             char stationName[MAX_WORDSIZE];
             char longitude[MAX_WORDSIZE];
             char latitude[MAX_WORDSIZE];
-            sscanf(line, "%s, %s, %s", stationName, longitude, latitude);
+            sscanf(line, "%s,%s,%s", stationName, longitude, latitude);
             strcpy( station->stationName, stationName);
             station->longitude = atof(longitude);
             station->latitude = atof(latitude);
@@ -155,7 +155,7 @@ void read_timetable(char filename[], struct timetable *station)
             char departingFrom[MAX_WORDSIZE];
             char arrivalTime[MAX_WORDSIZE];
             char arrivalStation[MAX_WORDSIZE];
-            sscanf( line, "%s, %s, %s, %s, %s", departTime, routeName, departingFrom, arrivalTime, arrivalStation);
+            sscanf( line, "%s,%s,%s,%s,%s", departTime, routeName, departingFrom, arrivalTime, arrivalStation);
                     station->departures[station->nroutes].departureTime = atoi(departTime);
             strcpy(station->departures[station->nroutes].routeName, routeName);
             strcpy( station->departures[station->nroutes].departingFrom, departingFrom);
@@ -168,8 +168,8 @@ void read_timetable(char filename[], struct timetable *station)
 }
 
 void create_name_message(struct client_server *my_server, char *name_message){
-    char temp[MAX_WORDSIZE];
-    char temp2[MAX_WORDSIZE];
+    char temp[MAX_LINESIZE];
+    char temp2[MAX_LINESIZE];
     strcpy(temp, "Type_Name/n");
     strcat(temp, my_server->name);
     strcat(temp, ";");
@@ -189,7 +189,7 @@ void parse_msg_data(messages* message, char* msg_data)
     char arrivalStation[MAX_WORDSIZE];
 
     while (sscanf(msg_data, "%s;%s", msg_hop, msg_data) > 0){
-        sscanf( msg_hop, "%s, %s, %s, %s, %s", departTime, routeName, departingFrom, arrivalTime, arrivalStation);
+        sscanf( msg_hop, "%s,%s,%s,%s,%s", departTime, routeName, departingFrom, arrivalTime, arrivalStation);
                 message->data[hop].departureTime = atoi(departTime);
         strcpy( message->data[hop].routeName, routeName);
         strcpy( message->data[hop].departingFrom, departingFrom);
@@ -211,7 +211,7 @@ void parse_response_data(response* message, char* msg_data)
     char arrivalStation[MAX_WORDSIZE];
 
     while (sscanf(msg_data, "%s;%s", msg_hop, msg_data) > 0){
-        sscanf( msg_hop, "%s, %s, %s, %s, %s", departTime, routeName, departingFrom, arrivalTime, arrivalStation);
+        sscanf( msg_hop, "%s,%s,%s,%s,%s", departTime, routeName, departingFrom, arrivalTime, arrivalStation);
                 message->data[hop].departureTime = atoi(departTime);
         strcpy( message->data[hop].routeName, routeName);
         strcpy( message->data[hop].departingFrom, departingFrom);
@@ -225,7 +225,7 @@ void parse_response_data(response* message, char* msg_data)
 void parse_message(messages* message, char* msg)
 {// Parse message into its component parts and store in message struct
     char *line;
-    char key[MAX_WORDSIZE];
+    char key[MAX_LINESIZE];
     char msg_data[MAX_LINESIZE];
     line = strtok(msg, "/n");
     sscanf(line, "%s_%s", key, message->dataType);
@@ -241,7 +241,7 @@ void parse_message(messages* message, char* msg)
 void parse_response(response* message, char* msg){
     // Parse message into its component parts and store in message struct
     char *line;
-    char key[MAX_WORDSIZE];
+    char key[MAX_LINESIZE];
     char msg_data[MAX_LINESIZE];
     line = strtok(msg, "/n");
     sscanf(line, "%s_%s", key, message->dataType);
@@ -257,7 +257,7 @@ void parse_response(response* message, char* msg){
 void parse_query(messages* message, char* msg){
     // Parse message into its component parts and store in message struct
     char *line;
-    char key[MAX_WORDSIZE];
+    char key[MAX_LINESIZE];
     char msg_data[MAX_LINESIZE];
     line = strtok(msg, "/n");
     sscanf(line, "%s_%s", key, message->dataType);
@@ -273,13 +273,13 @@ void parse_query(messages* message, char* msg){
 void create_query(char* query, route* route)
 {// Create a query message to send to other servers
     char temp[MAX_LINESIZE];
-    sprintf(temp, "%s;%d,%s,%s,%d,%s", query, route->departureTime, route->routeName, route->departingFrom, route->arrivalTime, route->arrivalStation);
+    sprintf(temp, "%s,%d:%d,%s,%s,%d,%s", query, route->departureTime/100, route->departureTime%100, route->routeName, route->departingFrom, route->arrivalTime, route->arrivalStation);
     strcpy (query, temp);
 }
 
 void create_response(char* reply, char* neg_or_pos, response* message){
-    char response[MAX_WORDSIZE];
-    char temp[MAX_WORDSIZE];
+    char response[MAX_LINESIZE];
+    char temp[MAX_LINESIZE];
     strcpy(response, "Type_Response\n");
     strcat(response, "\n");
     strcat(response, neg_or_pos);
@@ -389,7 +389,8 @@ void handle_message(char *msg, struct timetable *station, struct client_server *
         }
 
 }
-void handle_response(response *message, char *msg, struct timetable *station, struct client_server *my_server){
+void handle_response(char *msg, struct timetable *station, struct client_server *my_server){
+    response* message = NULL;
     parse_response(message, msg);
         if (DEBUG && message == NULL){
             printf("Failed to parse message/n");
@@ -488,8 +489,7 @@ void process_name_message(char* message, struct client_server *my_server, struct
         handle_message(message, station, my_server);
     }
     else if (strcmp(&message[5], "R") == 0){
-        response* response;
-        handle_response(response, message, station, my_server);
+        handle_response(message, station, my_server);
     }
 }
 
@@ -519,7 +519,7 @@ void* udp_port(struct client_server *my_server, struct timetable *station){
 
 void send_name_out(struct client_server *my_server){
 
-    char temp[MAX_WORDSIZE];
+    char temp[MAX_LINESIZE];
     create_name_message(my_server, temp);
     while(1){
         for(int i = 0; i < my_server->neighbour_count; i++){
@@ -557,7 +557,7 @@ void server_listen(struct client_server *my_server, struct timetable *station){
         token = strtok(client_req, delim);
         token = strtok(NULL, delim);
         char destination[MAX_WORDSIZE];
-        for (int i = 0; i < MAX_WORDSIZE; i++){
+        for (int i = 0; i < MAX_LINESIZE; i++){
             if (token[i] == ' ') {
                 destination[i] = '\0';
                 break;
@@ -568,10 +568,13 @@ void server_listen(struct client_server *my_server, struct timetable *station){
         route neighbour_route;
         if (find_route(&neighbour_route, 0, destination, station)){
             char* response = "HTTP/1.1 200 OK\nContent-Type: text/html\n\n<html><body><h1>";
-            sprintf(response, "%s:%d", response, neighbour_route.departureTime);
+            char temp[MAX_LINESIZE];
+            sprintf(temp, ",%d:%d", neighbour_route.departureTime/100, neighbour_route.departureTime%100);
+            strcat(response, temp);
             strcat(response, neighbour_route.routeName);
             strcat(response, neighbour_route.departingFrom);
-            sprintf(response, "%s:%d", response, neighbour_route.arrivalTime);
+            sprintf(temp, ",%d:%d", neighbour_route.arrivalTime/100, neighbour_route.arrivalTime%100);
+            strcat(response, temp);
             strcat(response, neighbour_route.arrivalStation);
             strcat(response, "</h1></body></html>");
             send(accept_sock, response, sizeof(response), 0);
@@ -613,7 +616,7 @@ void server_listen(struct client_server *my_server, struct timetable *station){
         }
         char* response = "HTTP/1.1 200 OK\nContent-Type: text/html\n\n<html><body><h1>";
         for(int i = 0; i < best_response->currentHop; i++){
-            char temp[MAX_WORDSIZE];
+            char temp[MAX_LINESIZE];
             sprintf(temp, "%d:%d", best_response->data[i].departureTime / 100, best_response->data[i].departureTime % 100);
             strcat(response, temp);
             strcat(response, best_response->data[i].routeName);
@@ -639,7 +642,7 @@ int main(int argc, char const *argv[]){
     my_server.neighbours_added = 0;
     int num_neighbours = argc-4;
     my_server.neighbour_count = num_neighbours;
-    char temp[MAX_WORDSIZE];
+    char temp[MAX_LINESIZE];
     for(int i = 0; i < num_neighbours; i++){
         strcpy((char*)temp, (char*)argv[4+i]);
         // split temp with ":" and store in a new array
