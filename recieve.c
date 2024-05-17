@@ -460,7 +460,8 @@ void process_name_message(char* message, struct client_server *my_server, struct
         strcpy(my_server->neighbour_list[my_server->neighbours_added].name, name);
         my_server->neighbour_list[my_server->neighbours_added].added = true;
         my_server->neighbours_added++;
-        char* own_name = create_name_message(my_server);
+        char* own_name;
+        create_name_message(my_server, own_name);
         send_udp(atoi(token2), own_name);
         return;
     }
@@ -492,7 +493,9 @@ void* udp_port(struct client_server *my_server, struct timetable *station){
 }
 
 void send_name_out(struct client_server *my_server){
-    char* temp = create_name_message(my_server);
+
+    char* temp;
+    create_name_message(my_server, temp);
     while(1){
         for(int i = 0; i < my_server->neighbour_count; i++){
             if(my_server->neighbour_list[i].added == false){
@@ -556,7 +559,7 @@ void server_listen(struct client_server *my_server, struct timetable *station){
                 char* query = "Type_Query\n";
                 strcat(query, destination);
                 strcat(query, "\n");
-                create_query(&query, &neighbour_route);
+                create_query(query, &neighbour_route);
                 send_udp(my_server->neighbour_list[i].port, query);
                 my_server->messages_count++;
             }
