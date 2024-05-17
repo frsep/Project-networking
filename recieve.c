@@ -467,7 +467,8 @@ void process_name_message(char* message, struct client_server *my_server, struct
         handle_message(message, station, my_server);
     }
     else if (strcmp(&message[5], "R") == 0){
-        handle_response(message, station, my_server);
+        response* response;
+        handle_response(response, message, station, my_server);
     }
 }
 
