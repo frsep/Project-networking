@@ -415,7 +415,8 @@ void handle_response(response *message, char *msg, struct timetable *station, st
                     j--;
                 }
                 j--;
-                char* neg_response = create_response("Result_Fail", message);
+                char* neg_response;
+                create_response(neg_response, "Result_Fail", message);
                 for(int x = 0; x < my_server->neighbour_count; x++){
                     if (strcmp(my_server->neighbour_list[x].name, message->data[j].departingFrom)){
                         send_udp(my_server->neighbour_list[x].port, neg_response);
@@ -432,7 +433,9 @@ void handle_response(response *message, char *msg, struct timetable *station, st
             j--;
             for(int x = 0; x < my_server->neighbour_count; x++){
                 if(strcmp(my_server->neighbour_list[x].name, best_response.data[j].arrivalStation)){
-                    send_udp(my_server->neighbour_list[x].port, create_response("Result_Success", &best_response));
+                    char* res;
+                    create_response(res,"Result_Success",&best_response);
+                    send_udp(my_server->neighbour_list[x].port, res);
                     break;
                 }
             }
