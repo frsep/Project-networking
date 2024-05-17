@@ -50,7 +50,7 @@ Data_10:00,Route 1,Station3,10:15,Route 1,Warwick-Stn;10:15,Route 1,Warwick-Stn,
 -------------------Acknowledgements----------------
 My idea is to keep all messages for a specific server in a queue. Each iteration of the main loop, if you have not
 received an "ACK" from the server, send it again.
-As soon as a server receives any message that is not an ACK, it sends back "ACK" in response
+As soon as a server receives any message that is not an ACK, it sends back "ACK_True" + received message in response
 When a server receives an ACK, it knows to pop the first message out of the queue and start sending the next one in line
 until the ack is received
 
