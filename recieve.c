@@ -52,7 +52,7 @@ typedef struct
     int current_response_count;
     int responses_needed;
     response responses[MAX_HOPS];
-} message_s;
+} messages;
 
 struct timetable
 {// Timetable struct to hold station name, lat/lon, and array of all departure routes
@@ -71,7 +71,7 @@ struct client_server
     char name[MAX_WORDSIZE];
     int messages_count;
     struct neighbours *neighbour_list;
-    message_s queries[MAX_STATIONS];
+    messages queries[MAX_STATIONS];
     response responses[MAX_STATIONS];
     int responses_count;
     int neighbours_added;
@@ -83,7 +83,7 @@ bool find_route(route *found, int time, char *final_destination, struct timetabl
     for (int i = 0; i<station->nroutes; i++){
         if (time < station->departures[i].departureTime){
             if (strcmp(station->departures[i].arrivalStation, final_destination)){
-                *found = station->departures[i];
+                *found = station->departures[i]; 
                 return true;
             }
         }
@@ -168,7 +168,7 @@ void create_name_message(struct client_server *my_server, char *name_message){
     strcpy(name_message, temp);
 }
 
-void parse_msg_data(message_s* message, char* msg_data)
+void parse_msg_data(messages* message, char* msg_data)
 {// Parse data into its component hops
     int hop = 0;
     char msg_hop[MAX_LINESIZE];
@@ -212,7 +212,7 @@ void parse_response_data(response* message, char* msg_data)
     message->currentHop = hop;
 }
 
-void parse_message(message_s* message, char* msg)
+void parse_message(messages* message, char* msg)
 {// Parse message into its component parts and store in message struct
     char *line;
     char key[MAX_WORDSIZE];
@@ -244,7 +244,7 @@ void parse_response(response* message, char* msg){
     parse_response_data(message, msg_data);
 }
 
-void parse_query(message_s* message, char* msg){
+void parse_query(messages* message, char* msg){
     // Parse message into its component parts and store in message struct
     char *line;
     char key[MAX_WORDSIZE];
@@ -317,7 +317,7 @@ void delete_message(int index, struct client_server *my_server){
 
 void handle_response(char *msg, struct timetable *station, struct client_server *my_server)
 {
-    message_s *message;
+    messages *message;
     if (strcmp(&message[5], "R") == 0){
         parse_response(message, msg);
         if (DEBUG && message == NULL){
