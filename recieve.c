@@ -36,7 +36,17 @@ typedef struct
     char destination[MAX_WORDSIZE];
     route data[MAX_HOPS];
     int currentHop;
-    message responces[MAX_HOPS];
+    int current_responce_count;
+    int responces_needed;
+} responce;
+typedef struct
+{// Message struct to hold contents of a message
+    char dataType[MAX_WORDSIZE];
+    char result[MAX_WORDSIZE];
+    char destination[MAX_WORDSIZE];
+    route data[MAX_HOPS];
+    int currentHop;
+    responce responces[MAX_HOPS];
     int current_responce_count;
     int responces_needed;
 } message;
@@ -275,7 +285,7 @@ void handle_response(char *msg, struct timetable *station, struct client_server 
             if(continew){
                 continue;
             }
-            my_server->queries[my_server->messages_count]->responces[my_server->queries[my_server->messages_count]->current_responce_count] = *message;
+            my_server->queries[my_server->messages_count]->responces[my_server->queries[my_server->messages_count]->current_responce_count] = message;
             my_server->queries[my_server->messages_count]->current_responce_count++;
 
         }
@@ -286,7 +296,7 @@ void handle_response(char *msg, struct timetable *station, struct client_server 
             int i;
             for(i = 0; i < message->current_responce_count; i++){
                 if(message->responces[i].data[message->currentHop].arrivalTime < lowest_time){
-                    if(strcmp(message->responces[i]->result,"Result_Success")){
+                    if(strcmp(message->responces[i].result,"Result_Success")){
                         lowest_time = message->responces[i].data[message->currentHop].arrivalTime;
                         best_responce = message->responces[i];
                     }
