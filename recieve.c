@@ -8,6 +8,14 @@
 #include <string.h>
 #include <ctype.h>
 
+/*
+Members:
+Malachy McGrath (23715959) <23715959@student.uwa.edu.au>
+Sepehr Amid (23342221) <23342221@student.uwa.edu.au>
+Joshua Ong (21713972) <21713972@student.uwa.edu.au>
+Fin O'Loughlin (23616047) <23616047@student.uwa.edu.au>
+*/
+
 // Constants
 #define MAX_WORDSIZE                    256
 #define MAX_STATIONS                    100
@@ -452,7 +460,7 @@ void process_name_message(char* message, struct client_server *my_server, struct
         char* name;
         token = strtok(message, delim);
         token2 = strtok(NULL, delim);
-        strcpy(my_server->neighbour_list[my_server->neighbours_added].port, atoi(token2));
+        my_server->neighbour_list[my_server->neighbours_added].port = atoi(token2);
         strtok(token, delim2);
         name = strtok(NULL, delim2);
         strcpy(my_server->neighbour_list[my_server->neighbours_added].name, name);
@@ -581,7 +589,7 @@ void server_listen(struct client_server *my_server, struct timetable *station){
             if(my_server->responses[i]->data[my_server->responses[i]->currentHop].arrivalTime < lowest_time){
                 if(strcmp(my_server->responses[i]->result,"Result_Success")){
                         lowest_time = my_server->responses[i]->data[my_server->responses[i]->currentHop].arrivalTime;
-                        best_response = &my_server->responses[i];
+                        best_response = my_server->responses[i];
                     }
             }
         }
