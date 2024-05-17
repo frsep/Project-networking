@@ -380,7 +380,7 @@ void handle_response(char *msg, struct timetable *station, struct client_server 
         printf("Invalid message type/n");
     }
 };
-void process_message(char* message, struct client_server *my_server, struct timetable *station){
+void process_name_message(char* message, struct client_server *my_server, struct timetable *station){
     if(strcmp(&message[5],"N")){
         char* delim= ";";
         char* delim2= "\n";
