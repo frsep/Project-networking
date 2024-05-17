@@ -74,7 +74,7 @@ struct client_server
     int messages_count;
     neighbours *neighbour_list;
     messages queries[MAX_STATIONS];
-    response responses[MAX_STATIONS];
+    response* responses[MAX_STATIONS];
     int responses_count;
     int neighbours_added;
 };
