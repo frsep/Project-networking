@@ -7,9 +7,10 @@ import csv
 import typing
 import select
 
-ACKNOWLEDGEMENTS = False
+ACKNOWLEDGEMENTS = True
 
 """
+TESTED ON LINUX
 Members:
 Malachy McGrath (23715959) <23715959@student.uwa.edu.au>
 Sepehr Amid (23342221) <23342221@student.uwa.edu.au>
