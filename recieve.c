@@ -269,12 +269,14 @@ void create_query(char* message, route* route)
 
 char* create_response(char* neg_or_pos, response* message){
     char response[MAX_WORDSIZE];
+    char temp[MAX_WORDSIZE];
     strcpy(response, "Type_Response\n");
     strcat(response, "\n");
     strcat(response, neg_or_pos);
     strcat(response, "\n");
     for(int i = 0; i < message->currentHop - 1; i++){
-        strcat(response, atoi(message->data[i].departureTime));
+        sprintf(temp, "%d:%d", message->data[i].departureTime/100, message->data[i].departureTime%100);
+        strcat(response, temp);
         strcat(response, ",");
         strcat(response, message->data[i].routeName);
         strcat(response, ",");
@@ -282,10 +284,12 @@ char* create_response(char* neg_or_pos, response* message){
         strcat(response, ",");
         strcat(response, message->data[i].arrivalStation);
         strcat(response, ",");
-        strcat(response, atoi(message->data[i].arrivalTime));
+        sprintf(temp, "%d:%d", message->data[i].arrivalTime/100, message->data[i].arrivalTime%100, );
+        strcat(response, temp);
         strcat(response, ";");
     }
-    strcat(response, atoi(message->data[message->currentHop - 1].departureTime));
+    sprintf(temp, "%d:%d", message->data[message->currentHop - 1].departureTime/100, message->data[message->currentHop - 1].departureTime%100);
+    strcat(response, temp);
     strcat(response, ",");
     strcat(response, message->data[message->currentHop - 1].routeName);
     strcat(response, ",");
@@ -293,7 +297,8 @@ char* create_response(char* neg_or_pos, response* message){
     strcat(response, ",");
     strcat(response, message->data[message->currentHop - 1].arrivalStation);
     strcat(response, ",");
-    strcat(response, atoi(message->data[message->currentHop - 1].arrivalTime));
+    sprintf(temp, "%d:%d", message->data[message->currentHop - 1].arrivalTime/100,  message->data[message->currentHop - 1].arrivalTime%100);
+    strcat(response, temp);
     return response;
 }
 
