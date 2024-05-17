@@ -643,7 +643,7 @@ int main(int argc, char const *argv[]){
     for(int i = 0; i < num_neighbours; i++){
         strcpy((char*)temp, (char*)argv[4+i]);
         // split temp with ":" and store in a new array
-        char* port_str = strtok(temp, ":");
+        strtok(temp, ":");
         char* ip_str = strtok(NULL, ":");
         // Store port_str and ip_str in separate arrays if needed
         my_server.neighbour_list[i].port = atoi(ip_str);
