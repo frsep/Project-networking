@@ -70,7 +70,7 @@ struct client_server
     int neighbour_count;
     char name[MAX_WORDSIZE];
     int messages_count;
-    struct neighbours *neighbour_list;
+    neighbours *neighbour_list;
     messages queries[MAX_STATIONS];
     response responses[MAX_STATIONS];
     int responses_count;
@@ -485,7 +485,7 @@ void* udp_port(struct client_server *my_server, struct timetable *station){
     while(1){
         int result = recvfrom(udp_sock, (char*)rec_message, sizeof(rec_message), 0, (struct sockaddr*) &other_serv_addr, &addrlen);
         //do something with received mesage
-        process_message(rec_message, my_server, station);
+        process_name_message(rec_message, my_server, station);
     }
     return NULL;
 }
