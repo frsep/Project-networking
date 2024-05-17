@@ -383,7 +383,7 @@ void handle_response(response *message, char *msg, struct timetable *station, st
             bool keepgoing = false;
             int j = 0;
             while(!strcmp(my_server->name, message->data[message->currentHop].arrivalStation)){
-                if (!strcmp(my_server->queries[i]->data[j]->arrivalStation, message->data[j].arrivalStation)) {
+                if (!strcmp(my_server->queries[i].data[j].arrivalStation, message->data[j].arrivalStation)) {
                     keepgoing = true;
                     break;
                 }
