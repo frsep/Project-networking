@@ -331,7 +331,7 @@ void handle_message(messages *message, char *msg, struct timetable *station, str
         if (find_route(&found, message->data[message->currentHop].arrivalTime, message->destination, station)){
             message->currentHop++;
             message->data[message->currentHop] = found;
-            char* pos_response [MAX_LINESIZE];
+            char pos_response [MAX_LINESIZE];
             create_response(pos_response, "Result_Success", message);
         }
         // send response to all neighbours that havnt been visited
