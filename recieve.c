@@ -8,6 +8,14 @@
 #include <string.h>
 #include <ctype.h>
 
+/*
+Members:
+Malachy McGrath (23715959) <23715959@student.uwa.edu.au>
+Sepehr Amid (23342221) <23342221@student.uwa.edu.au>
+Joshua Ong (21713972) <21713972@student.uwa.edu.au>
+Fin O'Loughlin (23616047) <23616047@student.uwa.edu.au>
+*/
+
 // Constants
 #define MAX_WORDSIZE                    256
 #define MAX_STATIONS                    100
@@ -605,9 +613,12 @@ void server_listen(struct client_server *my_server, struct timetable *station){
         }
         char* response = "HTTP/1.1 200 OK\nContent-Type: text/html\n\n<html><body><h1>";
         for(int i = 0; i < best_response->currentHop; i++){
+            char temp[MAX_WORDSIZE];
+            temp 
             strcat(response, best_response->data[i].departureTime);
             strcat(response, best_response->data[i].routeName);
             strcat(response, best_response->data[i].departingFrom);
+            sprintf(temp, "%d:%d", message->data[i].departureTime/100, message->data[i].departureTime%100);
             strcat(response, best_response->data[i].arrivalTime);
             strcat(response, best_response->data[i].arrivalStation);
         }
