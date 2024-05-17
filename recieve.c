@@ -574,9 +574,9 @@ void server_listen(struct client_server *my_server, struct timetable *station){
         response* best_response;
         int lowest_time = 1000000;
         for(int i = 0; i < my_server->responses_count; i++){
-            if(my_server->responses[i].data[my_server->responses[i].currentHop].arrivalTime < lowest_time){
+            if(my_server->responses[i]->data[my_server->responses[i]->currentHop].arrivalTime < lowest_time){
                 if(strcmp(my_server->responses[i]->result,"Result_Success")){
-                        lowest_time = my_server->responses[i].data[my_server->responses[i].currentHop].arrivalTime;
+                        lowest_time = my_server->responses[i]->data[my_server->responses[i]->currentHop].arrivalTime;
                         best_response = &my_server->responses[i];
                     }
             }
