@@ -347,8 +347,8 @@ void handle_response(char *msg, struct timetable *station, struct client_server 
             if(continew){
                 continue;
             }
-            my_server->queries[my_server.messages_count]->responses[my_server->queries[my_server.messages_count]->current_response_count] = message;
-            my_server->queries[my_server.messages_count]->current_response_count++;
+            my_server->queries[my_server->messages_count]->responses[my_server->queries[my_server->messages_count]->current_response_count] = message;
+            my_server->queries[my_server->messages_count]->current_response_count++;
 
         }
         /// if all respnces have been received then send best one back to source
@@ -606,16 +606,16 @@ int main(int argc, char const *argv[]){
     strcat(filename, argv[1]);
     read_timetable(filename, &station);
     struct client_server my_server;
-    my_server.responses_count = 0;
-    my_server.messages_count = 0;
-    my_server.neighbours_added = 0;
-    my_server.messages_count = 0;
+    my_server->responses_count = 0;
+    my_server->messages_count = 0;
+    my_server->neighbours_added = 0;
+    my_server->messages_count = 0;
     bool message_out_flag = false;
     int num_neighbours = argc-4;
-    my_server.neighbour_count = num_neighbours;
+    my_server->neighbour_count = num_neighbours;
 
     /**/
-    my_server.neighbour_list = (struct neighbours*)malloc(num_neighbours*sizeof(struct neighbours));
+    my_server->neighbour_list = (struct neighbours*)malloc(num_neighbours*sizeof(struct neighbours));
 
     char temp[MAX_WORDSIZE];
     for(int i = 0; i < num_neighbours; i++){
@@ -624,15 +624,15 @@ int main(int argc, char const *argv[]){
         char* port_str = strtok(temp, ":");
         char* ip_str = strtok(NULL, ":");
         // Store port_str and ip_str in separate arrays if needed
-        my_server.neighbour_list[i].port = atoi(ip_str);
-        my_server.neighbour_list[i].added = false;
+        my_server->neighbour_list[i].port = atoi(ip_str);
+        my_server->neighbour_list[i].added = false;
     }
 
 
 
-    my_server.query_port = atoi(argv[3]);
-    my_server.browser_port = atoi(argv[2]);
-    strcpy(my_server.name, argv[1]);
+    my_server->query_port = atoi(argv[3]);
+    my_server->browser_port = atoi(argv[2]);
+    strcpy(my_server->name, argv[1]);
     server_listen(&my_server, &station);
     return 0;
 }
