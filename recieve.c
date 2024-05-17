@@ -9,7 +9,7 @@
 #include <ctype.h>
 // Constants
 #define MAX_WORDSIZE                    256
-#define MAX_STATIONS                     100
+#define MAX_STATIONS                    100
 #define MAX_DEPARTURES                  100
 #define MAX_HOPS                        100
 #define MAX_LINESIZE                    256 
@@ -145,7 +145,7 @@ void read_timetable(char filename[], struct timetable *station)
     }
     fclose(tt); //closes timetable file when end of file reached
 }
-char* create_name_message(struct client_server *my_server){
+void create_name_message(struct client_server *my_server, char *name_message){
     char temp[MAX_WORDSIZE];
     char temp2[MAX_WORDSIZE];
     strcpy(temp, "Type_Name/n");
@@ -153,7 +153,7 @@ char* create_name_message(struct client_server *my_server){
     strcat(temp, ";");
     sprintf(temp2, "%d", my_server->query_port);
     strcat(temp, temp2);
-    return temp;
+    strcpy(name_message, temp);
 }
 void parse_data(message_s* message, char* msg_data)
 {// Parse data into its component hops
