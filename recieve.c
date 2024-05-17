@@ -506,11 +506,11 @@ void* udp_port(struct client_server *my_server, struct timetable *station){
     udp_addr.sin_family = AF_INET;
     udp_addr.sin_addr.s_addr = INADDR_ANY;
     udp_addr.sin_port = htons(my_server->query_port);
-    bind_udpsock = bind(udp_sock,(struct sockaddr*) &udp_addr, sizeof(struct sockaddr_in));
+    bind(udp_sock,(struct sockaddr*) &udp_addr, sizeof(struct sockaddr_in));
     socklen_t addrlen = sizeof(udp_addr);
     char rec_message[MAX_LINESIZE];
     while(1){
-        int result = recvfrom(udp_sock, (char*)rec_message, sizeof(rec_message), 0, (struct sockaddr*) &other_serv_addr, &addrlen);
+        recvfrom(udp_sock, (char*)rec_message, sizeof(rec_message), 0, (struct sockaddr*) &other_serv_addr, &addrlen);
         //do something with received mesage
         process_name_message(rec_message, my_server, station);
     }
