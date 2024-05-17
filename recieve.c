@@ -77,6 +77,11 @@ struct client_server{
 
 bool find_route(route *found, int time, char *final_destination, struct timetable *station)
 {// Check for possible route to desired destination within current station
+    if (station == NULL || final_destination == NULL){
+        fprintf(stderr, "Error: Station value is NULL.\n");
+        return false;
+    }
+
     for (int i = 0; i<station->nroutes; i++){
         if (time < station->departures[i].departureTime){
             if (strcmp(station->departures[i].arrivalStation, final_destination)){
@@ -110,7 +115,7 @@ void read_timetable(char filename[], struct timetable *station)
 {// Function to read csv file and load timetable data into structures.
     FILE *tt = fopen(filename, "r");                   // attempt to open file
     if(tt == NULL){                                    // checks for errors in opening file
-        printf("could not open timetable file '%s'\n", filename);
+        fprintf(stderr, "could not open timetable file '%s'\n", filename);
         exit(EXIT_FAILURE);                             //terminates if file can't be opened
     }
     //reading file
@@ -162,6 +167,10 @@ char* create_name_message(struct client_server *my_server){
 }
 void parse_data(message* message, char* msg_data)
 {// Parse data into its component hops
+    if (msg_data == NULL) {
+        fprintf(stderr, "Error: Input data is NULL.\n");
+        return;
+    }
     int hop = 0;
     char msg_hop[MAX_LINESIZE];
     char departTime[MAX_WORDSIZE];
@@ -183,6 +192,10 @@ void parse_data(message* message, char* msg_data)
 };
 void parse_response(message* message, char* msg){
     // Parse message into its component parts and store in message struct
+    if (msg == NULL){
+        fprintf(stderr, "Error: input message is NULL.\n");
+        return;
+    }
     char *line;
     char key[MAX_WORDSIZE];
     char msg_data[MAX_LINESIZE];
@@ -198,6 +211,10 @@ void parse_response(message* message, char* msg){
 };
 void parse_query(message* message, char* msg){
     // Parse message into its component parts and store in message struct
+    if (msg == NULL){
+        fprintf(stderr, "Error: input message is NULL.\n");
+        return;
+    }
     char *line;
     char key[MAX_WORDSIZE];
     char msg_data[MAX_LINESIZE];
@@ -264,14 +281,26 @@ void handle_response(char *msg, struct timetable *station, struct client_server 
 void send_udp(int port_number, char* message){
     struct sockaddr_in udp_addr;
     int udp_sock = socket(AF_INET, SOCK_DGRAM, 0);
+    if (udp_sock < 0){
+        perror("Error creating the UDP socket");
+        return;
+    }
     udp_addr.sin_family = AF_INET;
     udp_addr.sin_addr.s_addr = INADDR_ANY;
     udp_addr.sin_port = htons(port_number);
     int len = strlen(message);
     int result = sendto(udp_sock, message, len, 0, (struct sockaddr*) &udp_addr, sizeof(udp_addr));
+    if (result < 0){
+        perror("Error sending UDP message");
+        close(udp_sock);
+        return;
+    }
     close(udp_sock);
 }
 void process_message(char* message, struct client_server *my_server, struct timetable *station){
+    if (message == NULL){
+        fprintf(stderr, "Error: message is NULL.\n");
+    }
     if(strcmp(&message[5],"N")){
         char* delim= ";";
         char* delim2= "\n";
@@ -295,18 +324,35 @@ void process_message(char* message, struct client_server *my_server, struct time
 
 }
 int find_destination(char* message){
+    if (message == NULL){
+        fprintf(stderr, "Error: message is NULL");
+        return -1;
+    }
     char* delim= ",";
     char* token;
     token = strtok(message, delim);
+    if (token == NULL) {
+        fprintf(stderr,"Error: No token found in message.\n");
+        return -1;
+    }
     return atoi(token);
 }
 void* udp_port(struct client_server *my_server, struct timetable *station){
     struct sockaddr_in udp_addr, other_serv_addr;
     int udp_sock = socket(AF_INET, SOCK_DGRAM, 0);
+    if (udp_sock < 0){
+        perror("Error creating the UDP socket");
+        return NULL;
+    }
     udp_addr.sin_family = AF_INET;
     udp_addr.sin_addr.s_addr = INADDR_ANY;
     udp_addr.sin_port = htons(my_server->query_port);
     int bind_udpsock = bind(udp_sock,(struct sockaddr*) &udp_addr, sizeof(struct sockaddr_in));
+    if (bind_udpsock < 0 ) {
+        perror("Error binding the UDP socket");
+        close(udp_sock);
+        return NULL;
+    }
     socklen_t addrlen = sizeof(udp_addr);
     char rec_message[1000];
     while(1){
@@ -318,6 +364,10 @@ void* udp_port(struct client_server *my_server, struct timetable *station){
 }
 void send_name_out(struct client_server *my_server){
     char* temp = create_name_message(my_server);
+    if (temp == NULL){
+        fprintf(stderr, "Error creating name message. \n");
+        return;
+    }
     while(1){
         for(int i = 0; i < my_server->neighbour_count; i++){
             if(my_server->neighbour_list[i].added == false){
